@@ -1,11 +1,15 @@
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, ShoppingBag, Heart, User, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -25,6 +29,21 @@ export const Header = () => {
     } else {
       document.body.style.overflow = 'auto';
     }
+  };
+  
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Close search input
+    setIsSearchOpen(false);
+    
+    // Navigate to search results page with the query
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+    
+    // Reset search input
+    setSearchQuery('');
   };
   
   return (
@@ -47,9 +66,33 @@ export const Header = () => {
           </nav>
           
           <div className="flex items-center space-x-4">
-            <button className="p-1" aria-label="Search">
-              <Search size={20} className="text-mono-100" />
-            </button>
+            {isSearchOpen ? (
+              <form onSubmit={handleSearch} className="relative">
+                <Input 
+                  type="search"
+                  placeholder="Search..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pr-8 w-[200px]"
+                  autoFocus
+                  onBlur={() => setTimeout(() => setIsSearchOpen(false), 200)}
+                />
+                <button 
+                  type="submit"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                >
+                  <Search size={18} className="text-mono-400" />
+                </button>
+              </form>
+            ) : (
+              <button 
+                className="p-1" 
+                aria-label="Search" 
+                onClick={() => setIsSearchOpen(true)}
+              >
+                <Search size={20} className="text-mono-100" />
+              </button>
+            )}
             <Link to="/wishlist" className="p-1" aria-label="Wishlist">
               <Heart size={20} className="text-mono-100" />
             </Link>
@@ -114,6 +157,20 @@ export const Header = () => {
               onClick={toggleMenu}
             >
               ABOUT
+            </Link>
+            <Link 
+              to="/cart" 
+              className="hover:text-mono-300 transition-colors"
+              onClick={toggleMenu}
+            >
+              CART
+            </Link>
+            <Link 
+              to="/wishlist" 
+              className="hover:text-mono-300 transition-colors"
+              onClick={toggleMenu}
+            >
+              WISHLIST
             </Link>
             <Link 
               to="/login" 
