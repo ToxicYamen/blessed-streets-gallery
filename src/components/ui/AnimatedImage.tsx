@@ -26,12 +26,12 @@ export const AnimatedImage: React.FC<AnimatedImageProps> = ({
     aspectRatio === 'wide' ? 'aspect-[16/9]' : aspectRatio;
   
   return (
-    <div className={cn('overflow-hidden relative', aspectRatioClass, className)}>
+    <div className={cn('overflow-hidden relative rounded-xl', aspectRatioClass, className)}>
       <img 
         src={src}
         alt={alt}
         className={cn(
-          'w-full h-full object-cover transition-all duration-700',
+          'w-full h-full object-cover transition-all duration-700 rounded-xl',
           isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-110',
         )}
         onLoad={() => setIsLoaded(true)}
