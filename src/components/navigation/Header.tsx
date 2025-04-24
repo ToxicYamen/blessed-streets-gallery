@@ -78,7 +78,7 @@ export const Header = () => {
       >
         <div className="blesssed-container h-full flex flex-col">
           <div className="flex justify-between items-center py-5">
-            <Link to="/" className="text-xl md:text-2xl font-bold tracking-tighter">
+            <Link to="/" className="text-xl md:text-2xl font-bold tracking-tighter" onClick={toggleMenu}>
               blesssed streets
             </Link>
             <button onClick={toggleMenu}>

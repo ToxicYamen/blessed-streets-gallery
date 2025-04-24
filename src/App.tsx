@@ -11,6 +11,7 @@ import Footer from "@/components/footer/Footer";
 import HomePage from "./pages/HomePage";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
+import Collections from "./pages/Collections";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/shop" element={<Shop />} />
+              <Route path="/collections" element={<Collections />} />
               <Route path="/product/:id" element={<ProductDetail />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
