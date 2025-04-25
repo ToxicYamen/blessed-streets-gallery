@@ -48,12 +48,20 @@ export const Header = () => {
   }, []);
 
   const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-    if (!isMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
+    if (isMenuOpen) {
       document.body.style.overflow = 'auto';
+    } else {
+      document.body.style.overflow = 'hidden';
     }
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleNavClick = (path: string) => {
+    document.body.style.overflow = 'auto';
+    setIsMenuOpen(false);
+    pageTransition(() => {
+      navigate(path);
+    });
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -100,14 +108,14 @@ export const Header = () => {
           </Link>
 
           <nav className="hidden md:flex items-center space-x-8 text-sm">
-            <Link to="/shop" className="text-white" data-navigation="true">SHOP</Link>
-            <Link to="/collections" className="text-white" data-navigation="true">COLLECTIONS</Link>
-            <Link to="/lookbook" className="text-white" data-navigation="true">LOOKBOOK</Link>
-            <Link to="/about" className="text-white" data-navigation="true">ABOUT</Link>
+            <Link to="/shop" className="text-white" onClick={toggleMenu} data-navigation="true">SHOP</Link>
+            <Link to="/collections" className="text-white" onClick={toggleMenu} data-navigation="true">COLLECTIONS</Link>
+            <Link to="/lookbook" className="text-white" onClick={toggleMenu} data-navigation="true">LOOKBOOK</Link>
+            <Link to="/about" className="text-white" onClick={toggleMenu} data-navigation="true">ABOUT</Link>
           </nav>
 
           <div className="flex items-center space-x-4">
-            <ThemeToggle className="text-gray-400" />
+            <ThemeToggle />
 
             {/* Search Bar */}
             <div className="hidden md:block relative">
@@ -189,86 +197,72 @@ export const Header = () => {
       </header>
 
       {/* Mobile Menu Overlay */}
-      <div
-        className={cn(
-          "fixed inset-0 bg-black z-50 lg:hidden md:hidden",
-          isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        )}
-      >
-        <div className="blesssed-container h-full flex flex-col">
-          <div className="flex justify-between items-center py-5">
-            <Link to="/" className="text-xl md:text-2xl font-bold tracking-tighter text-white" onClick={toggleMenu} data-navigation="true">
-              Blessed streets
-            </Link>
-            <button onClick={toggleMenu}>
-              <X size={24} className="text-white" />
-            </button>
-          </div>
+      {isMenuOpen && (
+        <div className="fixed inset-0 bg-black z-50 lg:hidden md:hidden">
+          <div className="blesssed-container h-full flex flex-col">
+            <div className="flex justify-between items-center py-5">
+              <span className="text-xl md:text-2xl font-bold tracking-tighter text-white">
+                Blessed streets
+              </span>
+              <button
+                onClick={() => setIsMenuOpen(false)}
+                className="text-white"
+              >
+                <X size={24} />
+              </button>
+            </div>
 
-          <nav className="flex flex-col space-y-8 mt-16 text-2xl font-medium">
-            <Link
-              to="/shop"
-              className="text-white"
-              onClick={toggleMenu}
-              data-navigation="true"
-            >
-              SHOP
-            </Link>
-            <Link
-              to="/collections"
-              className="text-white"
-              onClick={toggleMenu}
-              data-navigation="true"
-            >
-              COLLECTIONS
-            </Link>
-            <Link
-              to="/lookbook"
-              className="text-white"
-              onClick={toggleMenu}
-              data-navigation="true"
-            >
-              LOOKBOOK
-            </Link>
-            <Link
-              to="/about"
-              className="text-white"
-              onClick={toggleMenu}
-              data-navigation="true"
-            >
-              ABOUT
-            </Link>
-            <Link
-              to="/cart"
-              className="text-white"
-              onClick={toggleMenu}
-              data-navigation="true"
-            >
-              CART
-            </Link>
-            <Link
-              to="/wishlist"
-              className="text-white"
-              onClick={toggleMenu}
-              data-navigation="true"
-            >
-              WISHLIST
-            </Link>
-            <Link
-              to="/auth/login"
-              className="text-white"
-              onClick={toggleMenu}
-              data-navigation="true"
-            >
-              LOGIN
-            </Link>
-          </nav>
+            <nav className="flex flex-col space-y-8 mt-16 text-2xl font-medium">
+              <button
+                className="text-white text-left"
+                onClick={() => handleNavClick('/shop')}
+              >
+                SHOP
+              </button>
+              <button
+                className="text-white text-left"
+                onClick={() => handleNavClick('/collections')}
+              >
+                COLLECTIONS
+              </button>
+              <button
+                className="text-white text-left"
+                onClick={() => handleNavClick('/lookbook')}
+              >
+                LOOKBOOK
+              </button>
+              <button
+                className="text-white text-left"
+                onClick={() => handleNavClick('/about')}
+              >
+                ABOUT
+              </button>
+              <button
+                className="text-white text-left"
+                onClick={() => handleNavClick('/cart')}
+              >
+                CART
+              </button>
+              <button
+                className="text-white text-left"
+                onClick={() => handleNavClick('/wishlist')}
+              >
+                WISHLIST
+              </button>
+              <button
+                className="text-white text-left"
+                onClick={() => handleNavClick('/auth/login')}
+              >
+                LOGIN
+              </button>
+            </nav>
 
-          <div className="mt-auto pb-8 text-sm text-white/50">
-            © {new Date().getFullYear()} blessed streets
+            <div className="mt-auto pb-8 text-sm text-white/50">
+              © {new Date().getFullYear()} blessed streets
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 };
