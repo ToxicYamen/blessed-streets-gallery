@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     rollupOptions: {
-      external: ['@tsparticles/react', 'canvas'],
+      external: ['canvas'],
     },
   },
 }));
