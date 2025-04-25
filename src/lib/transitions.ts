@@ -1,3 +1,4 @@
+
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -141,7 +142,15 @@ export const pageTransition = (onComplete?: () => void) => {
     });
 };
 
-export const scrollReveal = (element: HTMLElement, options = {}) => {
+interface ScrollRevealOptions {
+    y?: number;
+    opacity?: number;
+    duration?: number;
+    delay?: number;
+    stagger?: number;
+}
+
+export const scrollReveal = (element: HTMLElement, options: ScrollRevealOptions = {}) => {
     gsap.fromTo(
         element,
         {
@@ -163,7 +172,7 @@ export const scrollReveal = (element: HTMLElement, options = {}) => {
     );
 };
 
-export const scrollRevealStagger = (elements: HTMLElement[], options = {}) => {
+export const scrollRevealStagger = (elements: HTMLElement[], options: ScrollRevealOptions = {}) => {
     gsap.from(elements, {
         y: options.y || 60,
         opacity: 0,
