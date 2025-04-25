@@ -8,6 +8,7 @@ import { scrollReveal, scrollRevealStagger } from '@/lib/transitions';
 import LampDemo from '@/components/lamp-demo';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 
 const HomePage = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -19,6 +20,7 @@ const HomePage = () => {
   const productCardsRef = useRef<HTMLDivElement[]>([]);
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     setIsVisible(true);
@@ -77,14 +79,16 @@ const HomePage = () => {
       <div className="blesssed-container relative z-10 mt-24">
         <div className="max-w-2xl">
           <h1 className={`text-oversized mb-6 text-white transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
-            ELEVATED STREET FASHION
+            {t('home.heroTitle')}
           </h1>
           <p className={`text-mono-300 text-lg mb-8 max-w-lg transition-all duration-1000 delay-300 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
-            Premium quality. Minimalist design. Urban style. Blesssed Streets embodies the spirit of contemporary street culture.
+            {t('home.heroSubtitle')}
           </p>
-          <Link to="/shop" className="inline-flex items-center bg-mono-100 text-mono-900 px-8 py-3 text-sm font-medium">
-            Shop Now
-          </Link>
+          <Button asChild>
+            <Link to="/shop" data-navigation="true" className="inline-flex items-center bg-mono-100 text-mono-900 px-8 py-3 text-sm font-medium">
+              {t('home.shopNow')}
+            </Link>
+          </Button>
         </div>
       </div>
     </section>
@@ -132,11 +136,15 @@ const HomePage = () => {
     <section className="py-24 bg-mono-950">
       <div className="blesssed-container">
         <div className="flex justify-between items-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white">New Arrivals</h2>
-          <Link to="/shop/new-arrivals" className="text-black dark:text-white flex items-center">
-            View All
-            <ChevronRight className="h-4 w-4 ml-1" />
-          </Link>
+          <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white">
+            {t('home.newArrivals')}
+          </h2>
+          <Button variant="outline" asChild>
+            <Link to="/shop" data-navigation="true" className="text-black dark:text-white flex items-center">
+              {t('home.viewAll')}
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Link>
+          </Button>
         </div>
 
         <ProductGrid products={newArrivals} />
@@ -147,26 +155,41 @@ const HomePage = () => {
     <section className="py-24 border-t border-mono-800 dark:border-mono-800">
       <div className="blesssed-container">
         <div className="max-w-2xl mx-auto">
-          <div className="flex flex-col items-center gap-4 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-black dark:text-white">
-              Subscribe to our newsletter
+          <div className="flex flex-col items-center gap-6 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-black dark:text-white">
+              {t('home.newsletter.title')}
             </h2>
-            <p className="text-mono-600 dark:text-mono-400 text-center">
-              Get the latest updates and exclusive offers directly to your inbox.
+            <p className="text-mono-600 dark:text-mono-400 text-center max-w-lg">
+              {t('home.newsletter.subtitle')}
             </p>
-            <div className="w-full max-w-sm space-y-2">
-              <form className="flex space-x-2">
-                <Input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="max-w-lg flex-1 bg-white dark:bg-mono-800/50 border-black dark:border-mono-700"
-                />
-                <Button type="submit" className="bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90">
-                  Subscribe
-                </Button>
+            <div className="w-full max-w-md space-y-4">
+              <form className="flex w-full max-w-md items-center space-x-2">
+                <div className="flex-1 relative">
+                  <div className="relative">
+                    <Input
+                      type="email"
+                      id="newsletter"
+                      name="newsletter"
+                      placeholder=""
+                      className="w-full pl-4 pr-32 py-6 bg-white/5 border-white/10 text-white placeholder:text-white/50 rounded-full peer"
+                    />
+                    <label
+                      htmlFor="newsletter"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-mono-500 dark:text-mono-400 transition-all duration-200 peer-focus:-translate-y-9 peer-focus:text-xs peer-focus:text-black dark:peer-focus:text-white peer-[:not(:placeholder-shown)]:-translate-y-9 peer-[:not(:placeholder-shown)]:text-xs"
+                    >
+                      {t('home.newsletter.placeholder')}
+                    </label>
+                    <button
+                      type="submit"
+                      className="absolute right-1 top-[50%] -translate-y-1/2 px-6 py-2 bg-black text-white dark:bg-white dark:text-black rounded-full"
+                    >
+                      {t('home.newsletter.button')}
+                    </button>
+                  </div>
+                </div>
               </form>
-              <p className="text-xs text-mono-600 dark:text-mono-400">
-                By subscribing, you agree to our terms and privacy policy.
+              <p className="text-xs text-mono-600 dark:text-mono-400 max-w-md mx-auto">
+                {t('home.newsletter.terms')}
               </p>
             </div>
           </div>

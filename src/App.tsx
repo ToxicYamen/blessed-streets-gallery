@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { useEffect, useRef, useState } from "react";
 import { pageTransition } from "@/lib/transitions";
 import { CartProvider } from '@/context/CartContext';
+import './i18n/config';
 
 // Pages
 import HomePage from "./pages/HomePage";

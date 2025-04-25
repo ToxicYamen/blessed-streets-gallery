@@ -1,20 +1,29 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, ShoppingBag, Heart, User, Search } from 'lucide-react';
+import { Menu, X, ShoppingBag, Heart, User, Search, ChevronDown } from 'lucide-react';
+import ReactCountryFlag from "react-country-flag";
+import { useTranslation } from 'react-i18next';
 import { SearchInput } from '@/components/ui/search-input';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
 import { cartIconAnimation, pageTransition } from '@/lib/transitions';
 import { useCart } from '@/context/CartContext';
+import '@/i18n/config';
 
 export const Header = () => {
+  const { t, i18n } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isHeartAnimating, setIsHeartAnimating] = useState(false);
+  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState<'DE' | 'US'>(
+    localStorage.getItem('i18nextLng')?.startsWith('de') ? 'DE' : 'US'
+  );
   const cartIconRef = useRef<HTMLDivElement>(null);
+  const languageRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { cartItems } = useCart();
   const [isDarkMode, setIsDarkMode] = useState(document.documentElement.classList.contains('dark'));
@@ -45,6 +54,19 @@ export const Header = () => {
     });
 
     return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (languageRef.current && !languageRef.current.contains(event.target as Node)) {
+        setIsLanguageOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const toggleMenu = () => {
@@ -108,14 +130,91 @@ export const Header = () => {
           </Link>
 
           <nav className="hidden md:flex items-center space-x-8 text-sm">
-            <Link to="/shop" className="text-white" onClick={toggleMenu} data-navigation="true">SHOP</Link>
-            <Link to="/collections" className="text-white" onClick={toggleMenu} data-navigation="true">COLLECTIONS</Link>
-            <Link to="/lookbook" className="text-white" onClick={toggleMenu} data-navigation="true">LOOKBOOK</Link>
-            <Link to="/about" className="text-white" onClick={toggleMenu} data-navigation="true">ABOUT</Link>
+            <Link to="/shop" className="text-white" data-navigation="true">{t('navigation.shop')}</Link>
+            <Link to="/collections" className="text-white" data-navigation="true">{t('navigation.collections')}</Link>
+            <Link to="/lookbook" className="text-white" data-navigation="true">{t('navigation.lookbook')}</Link>
+            <Link to="/about" className="text-white" data-navigation="true">{t('navigation.about')}</Link>
           </nav>
 
           <div className="flex items-center space-x-4">
             <ThemeToggle />
+
+            {/* Language Selector - Desktop only */}
+            <div className="relative hidden lg:block" ref={languageRef}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white flex items-center gap-2 [&:hover]:bg-transparent"
+                onClick={() => setIsLanguageOpen(!isLanguageOpen)}
+              >
+                <ReactCountryFlag
+                  countryCode={currentLanguage}
+                  svg
+                  style={{
+                    width: '1.5em',
+                    height: '1.5em',
+                  }}
+                  title={currentLanguage}
+                />
+                <ChevronDown className={cn(
+                  "h-4 w-4 transition-transform duration-200",
+                  isLanguageOpen ? "rotate-180" : ""
+                )} />
+              </Button>
+
+              {isLanguageOpen && (
+                <div className="absolute right-0 mt-2 w-32 rounded-md shadow-lg bg-black/90 backdrop-blur-sm ring-1 ring-black ring-opacity-5 z-50">
+                  <div className="py-1">
+                    <button
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-2 text-sm text-white w-full",
+                        currentLanguage === 'DE' && "bg-white/5"
+                      )}
+                      onClick={() => {
+                        setCurrentLanguage('DE');
+                        i18n.changeLanguage('de');
+                        localStorage.setItem('i18nextLng', 'de');
+                        setIsLanguageOpen(false);
+                      }}
+                    >
+                      <ReactCountryFlag
+                        countryCode="DE"
+                        svg
+                        style={{
+                          width: '1.5em',
+                          height: '1.5em',
+                        }}
+                        title="DE"
+                      />
+                      Deutsch
+                    </button>
+                    <button
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-2 text-sm text-white w-full",
+                        currentLanguage === 'US' && "bg-white/5"
+                      )}
+                      onClick={() => {
+                        setCurrentLanguage('US');
+                        i18n.changeLanguage('en');
+                        localStorage.setItem('i18nextLng', 'en');
+                        setIsLanguageOpen(false);
+                      }}
+                    >
+                      <ReactCountryFlag
+                        countryCode="US"
+                        svg
+                        style={{
+                          width: '1.5em',
+                          height: '1.5em',
+                        }}
+                        title="US"
+                      />
+                      English
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Search Bar */}
             <div className="hidden md:block relative">
@@ -217,48 +316,48 @@ export const Header = () => {
                 className="text-white text-left"
                 onClick={() => handleNavClick('/shop')}
               >
-                SHOP
+                {t('navigation.shop')}
               </button>
               <button
                 className="text-white text-left"
                 onClick={() => handleNavClick('/collections')}
               >
-                COLLECTIONS
+                {t('navigation.collections')}
               </button>
               <button
                 className="text-white text-left"
                 onClick={() => handleNavClick('/lookbook')}
               >
-                LOOKBOOK
+                {t('navigation.lookbook')}
               </button>
               <button
                 className="text-white text-left"
                 onClick={() => handleNavClick('/about')}
               >
-                ABOUT
+                {t('navigation.about')}
               </button>
               <button
                 className="text-white text-left"
                 onClick={() => handleNavClick('/cart')}
               >
-                CART
+                {t('navigation.cart')}
               </button>
               <button
                 className="text-white text-left"
                 onClick={() => handleNavClick('/wishlist')}
               >
-                WISHLIST
+                {t('navigation.wishlist')}
               </button>
               <button
                 className="text-white text-left"
                 onClick={() => handleNavClick('/auth/login')}
               >
-                LOGIN
+                {t('navigation.login')}
               </button>
             </nav>
 
             <div className="mt-auto pb-8 text-sm text-white/50">
-              © {new Date().getFullYear()} blessed streets
+              {t('footer.copyright', { year: new Date().getFullYear() })}
             </div>
           </div>
         </div>

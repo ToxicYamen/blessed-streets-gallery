@@ -1,0 +1,232 @@
+{
+    "navigation": {
+        "shop": "SHOP",
+        "collections": "KOLLEKTIONEN",
+        "lookbook": "LOOKBOOK",
+        "about": "ÜBER UNS",
+        "cart": "WARENKORB",
+        "wishlist": "WUNSCHLISTE",
+        "login": "ANMELDEN",
+        "search": "Suchen"
+    },
+    "footer": {
+        "copyright": "© {{year}} blessed streets",
+        "about": "Über uns",
+        "contact": "Kontakt",
+        "shipping": "Versand",
+        "returns": "Rückgabe",
+        "privacy": "Datenschutz",
+        "terms": "AGB",
+        "faq": "FAQ"
+    },
+    "search": {
+        "placeholder": "Suchen...",
+        "noResults": "Keine Ergebnisse gefunden",
+        "results": "Suchergebnisse für \"{{query}}\""
+    },
+    "product": {
+        "addToCart": "In den Warenkorb",
+        "addToWishlist": "Zur Wunschliste hinzufügen",
+        "removeFromWishlist": "Von der Wunschliste entfernen",
+        "size": "Größe",
+        "color": "Farbe",
+        "quantity": "Menge",
+        "description": "Beschreibung",
+        "details": "Details",
+        "shipping": "Versandinformationen",
+        "inStock": "Auf Lager",
+        "outOfStock": "Ausverkauft",
+        "lowStock": "Nur noch {{count}} auf Lager",
+        "price": "{{price}} €",
+        "returns": "Rückgabe",
+        "related": "Das könnte dir auch gefallen",
+        "materials": "Materialien",
+        "care": "Pflegehinweise",
+        "sizeGuide": "Größentabelle",
+        "addedToCart": "In den Warenkorb gelegt",
+        "addedToWishlist": "Zur Wunschliste hinzugefügt",
+        "removedFromWishlist": "Von der Wunschliste entfernt",
+        "selectSize": "Bitte wähle eine Größe",
+        "selectColor": "Bitte wähle eine Farbe",
+        "detailsInfo": {
+            "material": "Material",
+            "fit": "Passform",
+            "modelSize": "Modellgröße",
+            "modelHeight": "Modellgröße (Körpergröße)",
+            "modelWearing": "Model trägt Größe"
+        },
+        "shippingInfo": {
+            "title": "Versandinformationen",
+            "domestic": {
+                "title": "Versand innerhalb Deutschlands",
+                "standard": "Standardversand (2-3 Werktage)",
+                "express": "Expressversand (1-2 Werktage)",
+                "free": "Kostenloser Versand ab 100 €"
+            },
+            "international": {
+                "title": "Internationaler Versand",
+                "standard": "Standardversand (5-10 Werktage)",
+                "express": "Expressversand (3-5 Werktage)",
+                "notice": "Zoll- und Steuergebühren können anfallen"
+            }
+        },
+        "returnsInfo": {
+            "title": "Rückgabe & Umtausch",
+            "period": "30 Tage Rückgaberecht",
+            "condition": "Artikel müssen ungetragen und mit Etikett sein",
+            "process": "Kostenlose Rücksendung mit vorfrankiertem Versandetikett",
+            "exceptions": "Sale-Artikel sind vom Umtausch ausgeschlossen"
+        },
+        "careInstructions": {
+            "title": "Pflegehinweise",
+            "washing": "Maschinenwäsche kalt",
+            "bleach": "Nicht bleichen",
+            "drying": "Trockner bei niedriger Temperatur",
+            "ironing": "Bei niedriger Temperatur bügeln falls nötig",
+            "cleaning": "Nicht chemisch reinigen"
+        },
+        "sizeInfo": {
+            "title": "Größeninformationen",
+            "measurementGuide": "Wie man richtig misst",
+            "chest": "Brustumfang",
+            "waist": "Taillenumfang",
+            "hips": "Hüftumfang",
+            "inseam": "Innenbeinlänge",
+            "shoulder": "Schulterbreite",
+            "sleeve": "Ärmellänge",
+            "unit": "Alle Maße in Zentimetern"
+        }
+    },
+    "cart": {
+        "empty": "Dein Warenkorb ist leer",
+        "continueShopping": "Weiter einkaufen",
+        "subtotal": "Zwischensumme",
+        "shipping": "Versand",
+        "total": "Gesamtsumme",
+        "checkout": "Zur Kasse",
+        "remove": "Entfernen",
+        "update": "Aktualisieren",
+        "code": "Gutscheincode",
+        "apply": "Einlösen"
+    },
+    "wishlist": {
+        "empty": "Deine Wunschliste ist leer",
+        "continueShopping": "Weiter einkaufen",
+        "moveToCart": "In den Warenkorb",
+        "remove": "Entfernen"
+    },
+    "auth": {
+        "login": "Anmelden",
+        "register": "Registrieren",
+        "forgotPassword": "Passwort vergessen?",
+        "email": "E-Mail",
+        "password": "Passwort",
+        "confirmPassword": "Passwort bestätigen",
+        "rememberMe": "Angemeldet bleiben",
+        "noAccount": "Noch kein Konto?",
+        "haveAccount": "Bereits ein Konto?",
+        "resetPassword": "Passwort zurücksetzen",
+        "createAccount": "Konto erstellen",
+        "resetLink": "Link zum Zurücksetzen senden",
+        "signInWith": "Anmelden mit"
+    },
+    "home": {
+        "heroTitle": "GEHOBENE STREETWEAR",
+        "heroSubtitle": "Premium Qualität. Minimalistisches Design. Urbaner Stil. Blesssed Streets verkörpert den Geist der zeitgenössischen Straßenkultur.",
+        "shopNow": "Jetzt Einkaufen",
+        "featuredCollection": "AUSGEWÄHLTE KOLLEKTION",
+        "newArrivals": "Neuheiten",
+        "viewAll": "Alle Anzeigen",
+        "aboutSection": {
+            "title": "BLESSSED STREETS Est. 2022",
+            "description": "Premium Streetwear für alle, die Qualität, Minimalismus und urbanen Stil schätzen.",
+            "learnMore": "Mehr Erfahren"
+        },
+        "newsletter": {
+            "title": "Newsletter",
+            "subtitle": "Erhalte die neuesten Updates und exklusive Angebote direkt in deinen Posteingang.",
+            "placeholder": "Deine E-Mail-Adresse",
+            "button": "Abonnieren",
+            "terms": "Mit dem Abonnieren stimmst du unseren Nutzungsbedingungen und der Datenschutzerklärung zu."
+        }
+    },
+    "collections": {
+        "title": "Kollektionen",
+        "viewCollection": "Kollektion ansehen",
+        "latest": "Neueste Kollektion",
+        "seasonal": "Saisonale Kollektion"
+    },
+    "about": {
+        "title": "Über Uns",
+        "story": {
+            "title": "Unsere Geschichte",
+            "content": "Blesssed Streets wurde 2022 mit der Vision gegründet, hochwertige Streetwear zu schaffen, die Qualität und urbanen Stil vereint."
+        },
+        "mission": {
+            "title": "Unsere Mission",
+            "content": "Wir streben danach, zeitlose Streetwear zu kreieren, die Qualität, Komfort und modernen urbanen Stil vereint."
+        },
+        "values": {
+            "title": "Unsere Werte",
+            "quality": "Qualität",
+            "sustainability": "Nachhaltigkeit",
+            "community": "Gemeinschaft",
+            "innovation": "Innovation"
+        },
+        "team": "Unser Team"
+    },
+    "shop": {
+        "title": "Shop",
+        "filter": "Filter",
+        "sort": "Sortieren",
+        "categories": "Kategorien",
+        "price": "Preis",
+        "color": "Farbe",
+        "size": "Größe",
+        "apply": "Anwenden",
+        "clear": "Zurücksetzen",
+        "noProducts": "Keine Produkte gefunden",
+        "filters": {
+            "all": "Alle",
+            "tshirts": "T-Shirts",
+            "hoodies": "Hoodies",
+            "jackets": "Jacken",
+            "pants": "Hosen",
+            "accessories": "Accessoires"
+        },
+        "sortOptions": {
+            "newest": "Neueste",
+            "priceAsc": "Preis aufsteigend",
+            "priceDesc": "Preis absteigend",
+            "nameAsc": "Name A-Z",
+            "nameDesc": "Name Z-A"
+        }
+    },
+    "lookbook": {
+        "title": "Lookbook",
+        "season": "Saison",
+        "collection": "Kollektion",
+        "shopTheStyle": "Style Shoppen"
+    },
+    "common": {
+        "loading": "Laden...",
+        "error": "Ein Fehler ist aufgetreten",
+        "retry": "Erneut versuchen",
+        "save": "Speichern",
+        "cancel": "Abbrechen",
+        "delete": "Löschen",
+        "edit": "Bearbeiten",
+        "back": "Zurück",
+        "next": "Weiter",
+        "submit": "Absenden",
+        "close": "Schließen"
+    },
+    "errors": {
+        "required": "Dieses Feld ist erforderlich",
+        "invalidEmail": "Ungültige E-Mail-Adresse",
+        "passwordMismatch": "Passwörter stimmen nicht überein",
+        "minLength": "Mindestens {{length}} Zeichen erforderlich",
+        "maxLength": "Maximal {{length}} Zeichen erlaubt",
+        "generic": "Etwas ist schief gelaufen"
+    }
+}

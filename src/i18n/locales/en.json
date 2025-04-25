@@ -1,0 +1,235 @@
+{
+    "navigation": {
+        "shop": "SHOP",
+        "collections": "COLLECTIONS",
+        "lookbook": "LOOKBOOK",
+        "about": "ABOUT",
+        "cart": "CART",
+        "wishlist": "WISHLIST",
+        "login": "LOGIN",
+        "search": "Search"
+    },
+    "footer": {
+        "copyright": "© {{year}} blessed streets",
+        "about": "About",
+        "contact": "Contact",
+        "shipping": "Shipping",
+        "returns": "Returns",
+        "privacy": "Privacy Policy",
+        "terms": "Terms & Conditions",
+        "faq": "FAQ"
+    },
+    "search": {
+        "placeholder": "Search...",
+        "noResults": "No results found",
+        "results": "Search results for \"{{query}}\""
+    },
+    "product": {
+        "addToCart": "Add to Cart",
+        "addToWishlist": "Add to Wishlist",
+        "removeFromWishlist": "Remove from Wishlist",
+        "size": "Size",
+        "color": "Color",
+        "quantity": "Quantity",
+        "description": "Description",
+        "details": "Details",
+        "shipping": "Shipping Information",
+        "inStock": "In Stock",
+        "outOfStock": "Out of Stock",
+        "lowStock": "Only {{count}} left in stock",
+        "price": "${{price}}",
+        "returns": "Returns",
+        "related": "You May Also Like",
+        "materials": "Materials",
+        "care": "Care Instructions",
+        "sizeGuide": "Size Guide",
+        "addedToCart": "Added to Cart",
+        "addedToWishlist": "Added to Wishlist",
+        "removedFromWishlist": "Removed from Wishlist",
+        "selectSize": "Please select a size",
+        "selectColor": "Please select a color",
+        "detailsInfo": {
+            "material": "Material",
+            "fit": "Fit",
+            "modelSize": "Model Size",
+            "modelHeight": "Model Height",
+            "modelWearing": "Model is wearing size"
+        },
+        "shippingInfo": {
+            "title": "Shipping Information",
+            "domestic": {
+                "title": "Domestic Shipping",
+                "standard": "Standard Delivery (3-5 business days)",
+                "express": "Express Delivery (1-2 business days)",
+                "free": "Free shipping on orders over $100"
+            },
+            "international": {
+                "title": "International Shipping",
+                "standard": "Standard Delivery (7-14 business days)",
+                "express": "Express Delivery (3-5 business days)",
+                "notice": "Import duties and taxes may apply"
+            }
+        },
+        "returnsInfo": {
+            "title": "Returns & Exchanges",
+            "period": "30-day return period",
+            "condition": "Items must be unworn with original tags",
+            "process": "Free returns with prepaid shipping label",
+            "exceptions": "Final sale items cannot be returned"
+        },
+        "careInstructions": {
+            "title": "Care Instructions",
+            "washing": "Machine wash cold",
+            "bleach": "Do not bleach",
+            "drying": "Tumble dry low",
+            "ironing": "Iron on low heat if needed",
+            "cleaning": "Do not dry clean"
+        },
+        "sizeInfo": {
+            "title": "Size Information",
+            "measurementGuide": "How to Measure",
+            "chest": "Chest",
+            "waist": "Waist",
+            "hips": "Hips",
+            "inseam": "Inseam",
+            "shoulder": "Shoulder",
+            "sleeve": "Sleeve Length",
+            "unit": "All measurements in inches"
+        }
+    },
+    "cart": {
+        "title": "Shopping Cart",
+        "empty": "Your cart is empty",
+        "continueShopping": "Continue Shopping",
+        "summary": "Order Summary",
+        "subtotal": "Subtotal",
+        "shipping": "Shipping",
+        "total": "Total",
+        "checkout": "Checkout",
+        "remove": "Remove",
+        "update": "Update",
+        "code": "Discount Code",
+        "apply": "Apply"
+    },
+    "wishlist": {
+        "title": "Wishlist",
+        "empty": "Your wishlist is empty",
+        "continueShopping": "Continue Shopping",
+        "moveToCart": "Move to Cart",
+        "remove": "Remove"
+    },
+    "auth": {
+        "login": "Login",
+        "register": "Register",
+        "forgotPassword": "Forgot Password?",
+        "email": "Email",
+        "password": "Password",
+        "confirmPassword": "Confirm Password",
+        "rememberMe": "Stay logged in",
+        "noAccount": "Don't have an account?",
+        "haveAccount": "Already have an account?",
+        "resetPassword": "Reset Password",
+        "createAccount": "Create Account",
+        "resetLink": "Send Reset Link",
+        "signInWith": "Sign in with"
+    },
+    "home": {
+        "heroTitle": "ELEVATED STREETWEAR",
+        "heroSubtitle": "Premium quality. Minimalist design. Urban style. Blessed Streets embodies the spirit of contemporary street culture.",
+        "shopNow": "Shop Now",
+        "featuredCollection": "FEATURED COLLECTION",
+        "newArrivals": "New Arrivals",
+        "viewAll": "View All",
+        "aboutSection": {
+            "title": "BLESSED STREETS Est. 2022",
+            "description": "Premium streetwear for those who value quality, minimalism, and urban style.",
+            "learnMore": "Learn More"
+        },
+        "newsletter": {
+            "title": "Newsletter",
+            "subtitle": "Get the latest updates and exclusive offers directly to your inbox.",
+            "placeholder": "Your email address",
+            "button": "Subscribe",
+            "terms": "By subscribing you agree to our Terms of Service and Privacy Policy."
+        }
+    },
+    "collections": {
+        "title": "Collections",
+        "viewCollection": "View Collection",
+        "latest": "Latest Collection",
+        "seasonal": "Seasonal Collection"
+    },
+    "about": {
+        "title": "About Us",
+        "story": {
+            "title": "Our Story",
+            "content": "Blessed Streets was founded in 2022 with a vision to create premium streetwear that combines quality and urban style."
+        },
+        "mission": {
+            "title": "Our Mission",
+            "content": "We strive to create timeless streetwear that combines quality, comfort, and modern urban style."
+        },
+        "values": {
+            "title": "Our Values",
+            "quality": "Quality",
+            "sustainability": "Sustainability",
+            "community": "Community",
+            "innovation": "Innovation"
+        },
+        "team": "Our Team"
+    },
+    "common": {
+        "loading": "Loading...",
+        "error": "An error occurred",
+        "retry": "Try Again",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "edit": "Edit",
+        "back": "Back",
+        "next": "Next",
+        "submit": "Submit",
+        "close": "Close"
+    },
+    "errors": {
+        "required": "This field is required",
+        "invalidEmail": "Invalid email address",
+        "passwordMismatch": "Passwords do not match",
+        "minLength": "Minimum {{length}} characters required",
+        "maxLength": "Maximum {{length}} characters allowed",
+        "generic": "Something went wrong"
+    },
+    "shop": {
+        "title": "Shop",
+        "filter": "Filter",
+        "sort": "Sort",
+        "categories": "Categories",
+        "price": "Price",
+        "color": "Color",
+        "size": "Size",
+        "apply": "Apply",
+        "clear": "Clear",
+        "noProducts": "No products found",
+        "filters": {
+            "all": "All",
+            "tshirts": "T-Shirts",
+            "hoodies": "Hoodies",
+            "jackets": "Jackets",
+            "pants": "Pants",
+            "accessories": "Accessories"
+        },
+        "sortOptions": {
+            "newest": "Newest",
+            "priceAsc": "Price Low to High",
+            "priceDesc": "Price High to Low",
+            "nameAsc": "Name A-Z",
+            "nameDesc": "Name Z-A"
+        }
+    },
+    "lookbook": {
+        "title": "Lookbook",
+        "season": "Season",
+        "collection": "Collection",
+        "shopTheStyle": "Shop the Style"
+    }
+}
