@@ -45,6 +45,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
             {product.name}
           </h3>
           <p className="text-sm text-muted-foreground dark:text-muted-foreground">{product.color}</p>
+          {product.inventory.some(item => item.quantity <= 3) && (
+            <p className="text-red-500 text-sm font-medium mt-1 flex items-center">
+              <span className="mr-1">⚠️</span> Nur noch sehr wenige auf Lager
+            </p>
+          )}
         </div>
         <div className="text-right">
           {product.isSale && product.salePrice ? (

@@ -81,7 +81,7 @@ export const useCartStore = create<CartStore>(
                             ...state,
                             items: state.items.map((i) =>
                                 i.id === item.id && i.size === item.size
-                                    ? { ...i, quantity: i.quantity + 1 }
+                                    ? { ...i, quantity: i.quantity + item.quantity }
                                     : i
                             ),
                         };
@@ -89,7 +89,7 @@ export const useCartStore = create<CartStore>(
                     console.log('New item, adding to cart');
                     return {
                         ...state,
-                        items: [...state.items, { ...item, quantity: 1 }]
+                        items: [...state.items, item]
                     };
                 });
                 console.log('Current cart:', get().items);

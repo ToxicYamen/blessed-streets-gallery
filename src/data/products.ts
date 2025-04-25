@@ -1,4 +1,3 @@
-
 export type ProductColor = 'black' | 'khaki';
 export type ProductSize = 'M' | 'L' | 'XL';
 
@@ -30,7 +29,7 @@ export const products: ProductCollection = {
   "black-hoodie": {
     id: "black-hoodie",
     name: "Blesssed Streets Logo Hoodie",
-    price: 99.99,
+    price: 69.99,
     description: "Premium black hoodie featuring the iconic Blesssed Streets logo embroidery. Made from high-quality cotton for ultimate comfort and style.",
     color: "black",
     images: [
@@ -40,7 +39,7 @@ export const products: ProductCollection = {
     ],
     sizes: ["M", "L", "XL"],
     inventory: [
-      { size: "M", quantity: 15 },
+      { size: "M", quantity: 3 },
       { size: "L", quantity: 18 },
       { size: "XL", quantity: 10 }
     ],
@@ -50,7 +49,7 @@ export const products: ProductCollection = {
   "khaki-hoodie": {
     id: "khaki-hoodie",
     name: "Blesssed Streets Logo Hoodie",
-    price: 99.99,
+    price: 59.99,
     description: "Premium khaki hoodie featuring the iconic Blesssed Streets logo embroidery. Made from high-quality cotton for ultimate comfort and style.",
     color: "khaki",
     images: [

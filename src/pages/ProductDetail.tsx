@@ -78,21 +78,36 @@ const ProductDetail = () => {
   const handleQuantityChange = (e: React.MouseEvent, change: number) => {
     e.preventDefault();
     e.stopPropagation();
-    if (change === -1 && quantity <= 1) return;
-    setQuantity(prev => Math.max(1, prev + change));
+    if (!selectedSize) return;
+
+    const currentStock = product?.inventory.find(item => item.size === selectedSize)?.quantity || 0;
+    const newQuantity = quantity + change;
+
+    if (newQuantity < 1) return;
+    if (newQuantity > currentStock) {
+      toast.error(`Nur noch ${currentStock} Stück verfügbar`);
+      return;
+    }
+
+    setQuantity(newQuantity);
   };
 
   const handleButtonClick = (handler: (e: React.MouseEvent) => void) => (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    // Prüfen ob das geklickte Element ein Button ist
     if (!(e.target instanceof HTMLButtonElement)) {
       return;
     }
 
     if (!selectedSize) {
       toast.error('Bitte wähle eine Größe aus');
+      return;
+    }
+
+    const currentStock = product?.inventory.find(item => item.size === selectedSize)?.quantity || 0;
+    if (quantity > currentStock) {
+      toast.error(`Nur noch ${currentStock} Stück verfügbar`);
       return;
     }
 
@@ -287,6 +302,21 @@ const ProductDetail = () => {
 
             <p className="text-xl font-medium mb-6 text-foreground">€{product.price}</p>
 
+            {/* Low Stock Warning */}
+            {selectedSize && (
+              <div className="mb-4">
+                {product.inventory.find(item => item.size === selectedSize)?.quantity <= 3 ? (
+                  <p className="text-red-500 text-sm font-medium">
+                    ⚠️ Nur noch {product.inventory.find(item => item.size === selectedSize)?.quantity} Stück verfügbar
+                  </p>
+                ) : (
+                  <p className="text-green-500 text-sm">
+                    ✓ Auf Lager
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Size Selection */}
             <div className="mb-6">
               <div className="flex justify-between items-center mb-2">
@@ -331,6 +361,11 @@ const ProductDetail = () => {
             <div className="mb-6">
               <div className="flex justify-between items-center mb-2">
                 <h2 className="text-sm font-medium text-foreground">Menge</h2>
+                {selectedSize && (
+                  <p className="text-sm text-muted-foreground">
+                    {product.inventory.find(item => item.size === selectedSize)?.quantity} Stück verfügbar
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-4">
                 <button
@@ -344,8 +379,9 @@ const ProductDetail = () => {
                 <span className="w-8 text-center text-foreground">{quantity}</span>
                 <button
                   type="button"
-                  className="w-8 h-8 flex items-center justify-center border border-white rounded-md text-foreground hover:bg-accent cursor-pointer"
+                  className={`w-8 h-8 flex items-center justify-center border border-white rounded-md text-foreground hover:bg-accent ${quantity >= (product?.inventory.find(item => item.size === selectedSize)?.quantity || 0) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                   onClick={(e) => handleQuantityChange(e, 1)}
+                  disabled={quantity >= (product?.inventory.find(item => item.size === selectedSize)?.quantity || 0)}
                 >
                   <Plus className="h-4 w-4" />
                 </button>
