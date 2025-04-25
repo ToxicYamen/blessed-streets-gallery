@@ -1,4 +1,5 @@
-import { create } from 'zustand';
+import { createStore } from 'zustand/vanilla';
+import { useStore } from 'zustand';
 
 interface CartItem {
     id: string;
@@ -19,7 +20,7 @@ interface CartStore {
     clearCart: () => void;
 }
 
-export const useCart = create<CartStore>((set) => ({
+const store = createStore<CartStore>((set) => ({
     cart: [],
     total: 0,
     addToCart: (item) =>
@@ -59,4 +60,6 @@ export const useCart = create<CartStore>((set) => ({
             };
         }),
     clearCart: () => set({ cart: [], total: 0 }),
-})); 
+}));
+
+export const useCart = () => useStore(store); 

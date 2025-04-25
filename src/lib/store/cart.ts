@@ -1,4 +1,5 @@
-import { create } from 'zustand';
+import { createStore } from 'zustand/vanilla';
+import { useStore } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 export interface CartItem {
@@ -28,7 +29,7 @@ interface CartActions {
 
 type CartStore = CartState & CartActions;
 
-export const useCartStore = create<CartStore>()(
+const store = createStore<CartStore>()(
     persist(
         (set, get) => ({
             items: [],
@@ -128,4 +129,6 @@ export const useCartStore = create<CartStore>()(
             name: 'cart-storage',
         }
     )
-); 
+);
+
+export const useCartStore = () => useStore(store); 
