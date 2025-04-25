@@ -24,6 +24,7 @@ import Cart from "./pages/Cart";
 import About from "./pages/About";
 import SearchResults from "./pages/SearchResults";
 import CheckoutPage from "./pages/CheckoutPage";
+import Account from "./pages/Account";
 
 // Auth Pages
 import Login from "@/pages/auth/Login";
@@ -96,13 +97,13 @@ const AppContent = () => {
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/about" element={<About />} />
             <Route path="/search" element={<SearchResults />} />
+            <Route path="/account" element={<Account />} />
 
             {/* Auth Routes */}
             <Route path="/auth/login" element={<Login />} />
             <Route path="/auth/register" element={<Register />} />
             <Route path="/auth/forgot-password" element={<ForgotPassword />} />
 
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
