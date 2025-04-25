@@ -1,27 +1,52 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, ShoppingBag, Heart, User, Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { SearchInput } from '@/components/ui/search-input';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { Button } from '../ui/button';
+import { cn } from '@/lib/utils';
+import { cartIconAnimation, pageTransition } from '@/lib/transitions';
+import { useCart } from '@/context/CartContext';
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isHeartAnimating, setIsHeartAnimating] = useState(false);
+  const cartIconRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  
+  const { cartItems } = useCart();
+  const [isDarkMode, setIsDarkMode] = useState(document.documentElement.classList.contains('dark'));
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
-    
+
     window.addEventListener('scroll', handleScroll);
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
-  
+
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          setIsDarkMode(document.documentElement.classList.contains('dark'));
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
     if (!isMenuOpen) {
@@ -30,159 +55,217 @@ export const Header = () => {
       document.body.style.overflow = 'auto';
     }
   };
-  
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Close search input
-    setIsSearchOpen(false);
-    
-    // Navigate to search results page with the query
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+      setIsSearchExpanded(false);
     }
-    
-    // Reset search input
-    setSearchQuery('');
   };
-  
+
+  const handleHeartClick = () => {
+    if (!isHeartAnimating) {
+      setIsHeartAnimating(true);
+      setTimeout(() => setIsHeartAnimating(false), 1000);
+      navigate('/wishlist');
+    }
+  };
+
+  const handleCartClick = () => {
+    if (cartIconRef.current) {
+      cartIconAnimation(cartIconRef.current);
+    }
+    pageTransition(() => {
+      navigate('/cart');
+    });
+  };
+
   return (
     <>
-      <header 
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled ? 'py-3 bg-mono-900/90 backdrop-blur-md border-b border-mono-800' : 'py-5'
-        }`}
+      <header
+        className={cn(
+          "fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 py-4",
+          isDarkMode
+            ? isScrolled
+              ? "bg-mono-950/90 backdrop-blur-sm border-b border-white/10" // Dark Mode + Scroll
+              : "bg-transparent" // Dark Mode ohne Scroll
+            : "bg-black/40 backdrop-blur-md border-b border-black/10" // Light Mode: Dunkler schwarzer Blur
+        )}
       >
-        <div className="blesssed-container flex items-center justify-between">
-          <Link to="/" className="text-xl md:text-2xl font-bold tracking-tighter">
-            blesssed streets
+        <div className="blesssed-container flex items-center justify-between mt-2">
+          <Link to="/" className="text-xl md:text-2xl font-bold tracking-tighter text-white" data-navigation="true">
+            Blessed streets
           </Link>
-          
+
           <nav className="hidden md:flex items-center space-x-8 text-sm">
-            <Link to="/shop" className="hover-underline">SHOP</Link>
-            <Link to="/collections" className="hover-underline">COLLECTIONS</Link>
-            <Link to="/lookbook" className="hover-underline">LOOKBOOK</Link>
-            <Link to="/about" className="hover-underline">ABOUT</Link>
+            <Link to="/shop" className="text-white" data-navigation="true">SHOP</Link>
+            <Link to="/collections" className="text-white" data-navigation="true">COLLECTIONS</Link>
+            <Link to="/lookbook" className="text-white" data-navigation="true">LOOKBOOK</Link>
+            <Link to="/about" className="text-white" data-navigation="true">ABOUT</Link>
           </nav>
-          
+
           <div className="flex items-center space-x-4">
-            {isSearchOpen ? (
-              <form onSubmit={handleSearch} className="relative">
-                <Input 
-                  type="search"
-                  placeholder="Search..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pr-8 w-[200px]"
-                  autoFocus
-                  onBlur={() => setTimeout(() => setIsSearchOpen(false), 200)}
-                />
-                <button 
-                  type="submit"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                >
-                  <Search size={18} className="text-mono-400" />
-                </button>
+            <ThemeToggle className="text-gray-400" />
+
+            {/* Search Bar */}
+            <div className="hidden md:block relative">
+              <form onSubmit={handleSearch} className="flex items-center">
+                <div className="flex items-center w-64">
+                  <SearchInput
+                    type="search"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/50 w-full pr-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 text-white"
+                  >
+                    <Search className="h-4 w-4" />
+                  </Button>
+                </div>
               </form>
-            ) : (
-              <button 
-                className="p-1" 
-                aria-label="Search" 
-                onClick={() => setIsSearchOpen(true)}
+            </div>
+
+            {/* Wishlist Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleHeartClick}
+              className={cn(
+                "text-white transition-colors duration-300",
+                isHeartAnimating && "text-red-500"
+              )}
+              data-navigation="true"
+            >
+              <Heart className={cn(
+                "h-4 w-4 transition-all duration-300",
+                isHeartAnimating && "animate-[pulse_1s_ease-in-out] scale-125 fill-red-500"
+              )} />
+            </Button>
+
+            {/* Cart Icon */}
+            <div
+              ref={cartIconRef}
+              className="relative cursor-pointer cart-icon rounded-md p-2"
+              onClick={handleCartClick}
+              data-navigation="true"
+            >
+              <ShoppingBag className="w-5 h-5 text-white" />
+              {cartItems.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {cartItems.reduce((total, item) => total + item.quantity, 0)}
+                </span>
+              )}
+            </div>
+
+            {/* User Button */}
+            <Link to="/auth/login" className="hidden md:block" data-navigation="true">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white"
+                data-navigation="true"
               >
-                <Search size={20} className="text-mono-100" />
-              </button>
-            )}
-            <Link to="/wishlist" className="p-1" aria-label="Wishlist">
-              <Heart size={20} className="text-mono-100" />
+                <User className="h-4 w-4" />
+              </Button>
             </Link>
-            <Link to="/cart" className="p-1" aria-label="Cart">
-              <ShoppingBag size={20} className="text-mono-100" />
-            </Link>
-            <Link to="/login" className="p-1 hidden md:block" aria-label="Account">
-              <User size={20} className="text-mono-100" />
-            </Link>
-            <button 
-              className="p-1 md:hidden" 
+
+            {/* Mobile Menu Button */}
+            <button
+              className="p-1 lg:hidden md:hidden"
               onClick={toggleMenu}
               aria-label="Menu"
             >
-              <Menu size={24} className="text-mono-100" />
+              <Menu size={24} className="text-white" />
             </button>
           </div>
         </div>
       </header>
-      
+
       {/* Mobile Menu Overlay */}
-      <div 
-        className={`fixed inset-0 bg-mono-900 z-50 transition-all duration-500 ${
+      <div
+        className={cn(
+          "fixed inset-0 bg-black z-50 lg:hidden md:hidden",
           isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
+        )}
       >
         <div className="blesssed-container h-full flex flex-col">
           <div className="flex justify-between items-center py-5">
-            <Link to="/" className="text-xl md:text-2xl font-bold tracking-tighter" onClick={toggleMenu}>
-              blesssed streets
+            <Link to="/" className="text-xl md:text-2xl font-bold tracking-tighter text-white" onClick={toggleMenu} data-navigation="true">
+              Blessed streets
             </Link>
             <button onClick={toggleMenu}>
-              <X size={24} className="text-mono-100" />
+              <X size={24} className="text-white" />
             </button>
           </div>
-          
+
           <nav className="flex flex-col space-y-8 mt-16 text-2xl font-medium">
-            <Link 
-              to="/shop" 
-              className="hover:text-mono-300 transition-colors"
+            <Link
+              to="/shop"
+              className="text-white"
               onClick={toggleMenu}
+              data-navigation="true"
             >
               SHOP
             </Link>
-            <Link 
-              to="/collections" 
-              className="hover:text-mono-300 transition-colors"
+            <Link
+              to="/collections"
+              className="text-white"
               onClick={toggleMenu}
+              data-navigation="true"
             >
               COLLECTIONS
             </Link>
-            <Link 
-              to="/lookbook" 
-              className="hover:text-mono-300 transition-colors"
+            <Link
+              to="/lookbook"
+              className="text-white"
               onClick={toggleMenu}
+              data-navigation="true"
             >
               LOOKBOOK
             </Link>
-            <Link 
-              to="/about" 
-              className="hover:text-mono-300 transition-colors"
+            <Link
+              to="/about"
+              className="text-white"
               onClick={toggleMenu}
+              data-navigation="true"
             >
               ABOUT
             </Link>
-            <Link 
-              to="/cart" 
-              className="hover:text-mono-300 transition-colors"
+            <Link
+              to="/cart"
+              className="text-white"
               onClick={toggleMenu}
+              data-navigation="true"
             >
               CART
             </Link>
-            <Link 
-              to="/wishlist" 
-              className="hover:text-mono-300 transition-colors"
+            <Link
+              to="/wishlist"
+              className="text-white"
               onClick={toggleMenu}
+              data-navigation="true"
             >
               WISHLIST
             </Link>
-            <Link 
-              to="/login" 
-              className="hover:text-mono-300 transition-colors"
+            <Link
+              to="/auth/login"
+              className="text-white"
               onClick={toggleMenu}
+              data-navigation="true"
             >
-              ACCOUNT
+              LOGIN
             </Link>
           </nav>
-          
-          <div className="mt-auto pb-8 text-sm text-mono-500">
-            © {new Date().getFullYear()} blesssed streets
+
+          <div className="mt-auto pb-8 text-sm text-white/50">
+            © {new Date().getFullYear()} blessed streets
           </div>
         </div>
       </div>

@@ -1,22 +1,17 @@
-
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import AnimatedImage from '@/components/ui/AnimatedImage';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 const About = () => {
   return (
     <div className="pt-24">
-      {/* Page Header */}
-      <section className="py-16 bg-mono-800">
-        <div className="blesssed-container">
-          <h1 className="text-3xl md:text-5xl font-bold mb-4">ABOUT US</h1>
-          <p className="text-mono-400 max-w-2xl">
-            The story behind blesssed streets and our mission to elevate street fashion.
-          </p>
-        </div>
-      </section>
-      
+      <PageHeader
+        title="ABOUT US"
+        description="The story behind blesssed streets and our mission to elevate street fashion."
+      />
+
       {/* Brand Story */}
       <section className="py-16">
         <div className="blesssed-container">
@@ -46,7 +41,7 @@ const About = () => {
           </div>
         </div>
       </section>
-      
+
       {/* Our Values */}
       <section className="py-16 bg-mono-800">
         <div className="blesssed-container">
@@ -73,7 +68,7 @@ const About = () => {
           </div>
         </div>
       </section>
-      
+
       {/* Team Section */}
       <section className="py-16">
         <div className="blesssed-container">
@@ -115,7 +110,7 @@ const About = () => {
           </div>
         </div>
       </section>
-      
+
       {/* CTA Section */}
       <section className="py-16 bg-mono-800">
         <div className="blesssed-container text-center">

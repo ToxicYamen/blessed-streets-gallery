@@ -1,15 +1,15 @@
-
 import { useState } from 'react';
 import { getAllProducts } from '@/data/products';
 import ProductGrid from '@/components/product/ProductGrid';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 const Shop = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedSize, setSelectedSize] = useState<string>('all');
   const [selectedColor, setSelectedColor] = useState<string>('all');
-  
+
   const allProducts = getAllProducts();
-  
+
   // Filter products based on selected filters
   const filteredProducts = allProducts.filter(product => {
     const colorMatch = selectedColor === 'all' || product.color === selectedColor;
@@ -19,16 +19,11 @@ const Shop = () => {
 
   return (
     <div className="pt-24">
-      {/* Page Header */}
-      <section className="py-16 bg-mono-800">
-        <div className="blesssed-container">
-          <h1 className="text-3xl md:text-5xl font-bold mb-4">SHOP ALL</h1>
-          <p className="text-mono-400 max-w-2xl">
-            Browse our complete collection of premium streetwear, designed for those who value quality and minimalist aesthetics.
-          </p>
-        </div>
-      </section>
-      
+      <PageHeader
+        title="SHOP ALL"
+        description="Browse our complete collection of premium streetwear, designed for those who value quality and minimalist aesthetics."
+      />
+
       {/* Products Section */}
       <section className="py-16">
         <div className="blesssed-container">
@@ -36,15 +31,15 @@ const Shop = () => {
             {/* Filters */}
             <div className="w-full md:w-64 shrink-0">
               <h2 className="text-lg font-medium mb-4">FILTERS</h2>
-              
+
               <div className="mb-8">
                 <h3 className="text-sm uppercase text-mono-500 mb-3">Color</h3>
                 <div className="space-y-2">
                   <div className="flex items-center">
-                    <input 
-                      type="radio" 
-                      id="color-all" 
-                      name="color" 
+                    <input
+                      type="radio"
+                      id="color-all"
+                      name="color"
                       className="mr-2"
                       checked={selectedColor === 'all'}
                       onChange={() => setSelectedColor('all')}
@@ -52,10 +47,10 @@ const Shop = () => {
                     <label htmlFor="color-all" className="text-sm">All Colors</label>
                   </div>
                   <div className="flex items-center">
-                    <input 
-                      type="radio" 
-                      id="color-black" 
-                      name="color" 
+                    <input
+                      type="radio"
+                      id="color-black"
+                      name="color"
                       className="mr-2"
                       checked={selectedColor === 'black'}
                       onChange={() => setSelectedColor('black')}
@@ -63,10 +58,10 @@ const Shop = () => {
                     <label htmlFor="color-black" className="text-sm">Black</label>
                   </div>
                   <div className="flex items-center">
-                    <input 
-                      type="radio" 
-                      id="color-khaki" 
-                      name="color" 
+                    <input
+                      type="radio"
+                      id="color-khaki"
+                      name="color"
                       className="mr-2"
                       checked={selectedColor === 'khaki'}
                       onChange={() => setSelectedColor('khaki')}
@@ -75,15 +70,15 @@ const Shop = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="mb-8">
                 <h3 className="text-sm uppercase text-mono-500 mb-3">Size</h3>
                 <div className="space-y-2">
                   <div className="flex items-center">
-                    <input 
-                      type="radio" 
-                      id="size-all" 
-                      name="size" 
+                    <input
+                      type="radio"
+                      id="size-all"
+                      name="size"
                       className="mr-2"
                       checked={selectedSize === 'all'}
                       onChange={() => setSelectedSize('all')}
@@ -91,10 +86,10 @@ const Shop = () => {
                     <label htmlFor="size-all" className="text-sm">All Sizes</label>
                   </div>
                   <div className="flex items-center">
-                    <input 
-                      type="radio" 
-                      id="size-m" 
-                      name="size" 
+                    <input
+                      type="radio"
+                      id="size-m"
+                      name="size"
                       className="mr-2"
                       checked={selectedSize === 'M'}
                       onChange={() => setSelectedSize('M')}
@@ -102,10 +97,10 @@ const Shop = () => {
                     <label htmlFor="size-m" className="text-sm">M</label>
                   </div>
                   <div className="flex items-center">
-                    <input 
-                      type="radio" 
-                      id="size-l" 
-                      name="size" 
+                    <input
+                      type="radio"
+                      id="size-l"
+                      name="size"
                       className="mr-2"
                       checked={selectedSize === 'L'}
                       onChange={() => setSelectedSize('L')}
@@ -113,10 +108,10 @@ const Shop = () => {
                     <label htmlFor="size-l" className="text-sm">L</label>
                   </div>
                   <div className="flex items-center">
-                    <input 
-                      type="radio" 
-                      id="size-xl" 
-                      name="size" 
+                    <input
+                      type="radio"
+                      id="size-xl"
+                      name="size"
                       className="mr-2"
                       checked={selectedSize === 'XL'}
                       onChange={() => setSelectedSize('XL')}
@@ -125,8 +120,8 @@ const Shop = () => {
                   </div>
                 </div>
               </div>
-              
-              <button 
+
+              <button
                 className="text-sm underline text-mono-400"
                 onClick={() => {
                   setSelectedCategory('all');
@@ -137,7 +132,7 @@ const Shop = () => {
                 Clear all filters
               </button>
             </div>
-            
+
             {/* Products */}
             <div className="flex-1">
               {filteredProducts.length === 0 ? (

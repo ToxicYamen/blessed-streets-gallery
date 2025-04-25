@@ -1,12 +1,13 @@
-
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Trash2, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Product } from '@/data/products';
 import { toast } from 'sonner';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 const Wishlist = () => {
+  const navigate = useNavigate();
   // Mock wishlist data - in a real app, this would come from a state management solution
   const [wishlistItems, setWishlistItems] = useState<Product[]>([
     {
@@ -37,18 +38,17 @@ const Wishlist = () => {
     toast.success(`${product.name} added to cart`);
   };
 
+  const handleProductClick = (productId: string) => {
+    navigate(`/product/${productId}`);
+  };
+
   return (
     <div className="pt-24">
-      {/* Page Header */}
-      <section className="py-16 bg-mono-800">
-        <div className="blesssed-container">
-          <h1 className="text-3xl md:text-5xl font-bold mb-4">MY WISHLIST</h1>
-          <p className="text-mono-400 max-w-2xl">
-            Items you've saved for later. Add them to your cart whenever you're ready.
-          </p>
-        </div>
-      </section>
-      
+      <PageHeader
+        title="MY WISHLIST"
+        description="Items you've saved for later. Add them to your cart whenever you're ready."
+      />
+
       {/* Wishlist Content */}
       <section className="py-16">
         <div className="blesssed-container">
@@ -56,9 +56,7 @@ const Wishlist = () => {
             <div className="text-center py-20">
               <h2 className="text-2xl mb-4">Your wishlist is empty</h2>
               <p className="text-mono-400 mb-8">Explore our shop and add items to your wishlist by clicking the heart icon.</p>
-              <Link to="/shop">
-                <Button>Explore Shop</Button>
-              </Link>
+              <Button onClick={() => navigate('/shop')}>Explore Shop</Button>
             </div>
           ) : (
             <div className="space-y-8">
@@ -77,16 +75,20 @@ const Wishlist = () => {
                         <td className="py-6">
                           <div className="flex items-center">
                             <div className="w-20 h-20 mr-4 overflow-hidden rounded-xl">
-                              <img 
-                                src={item.images[0]} 
-                                alt={item.name} 
+                              <img
+                                src={item.images[0]}
+                                alt={item.name}
                                 className="w-full h-full object-cover"
                               />
                             </div>
                             <div>
-                              <Link to={`/product/${item.id}`} className="font-medium hover:underline">
+                              <button
+                                type="button"
+                                onClick={() => handleProductClick(item.id)}
+                                className="font-medium hover:underline"
+                              >
                                 {item.name}
-                              </Link>
+                              </button>
                               <p className="text-mono-400 text-sm mt-1">Color: {item.color}</p>
                             </div>
                           </div>
@@ -94,17 +96,17 @@ const Wishlist = () => {
                         <td className="py-6">${item.price.toFixed(2)}</td>
                         <td className="py-6">
                           <div className="flex justify-end gap-4">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={() => addToCart(item)}
                               title="Add to cart"
                             >
                               <ShoppingBag size={18} />
                             </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={() => removeFromWishlist(item.id)}
                               title="Remove from wishlist"
                             >
@@ -118,9 +120,7 @@ const Wishlist = () => {
                 </table>
               </div>
               <div className="flex justify-between items-center pt-8 border-t border-mono-800">
-                <Link to="/shop">
-                  <Button variant="outline">Continue Shopping</Button>
-                </Link>
+                <Button variant="outline" onClick={() => navigate('/shop')}>Continue Shopping</Button>
               </div>
             </div>
           )}

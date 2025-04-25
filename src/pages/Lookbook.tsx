@@ -1,7 +1,7 @@
-
 import { useState } from 'react';
 import AnimatedImage from '@/components/ui/AnimatedImage';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageHeader } from '@/components/ui/PageHeader';
 
 interface LookbookItem {
   id: string;
@@ -67,16 +67,11 @@ const Lookbook = () => {
 
   return (
     <div className="pt-24">
-      {/* Page Header */}
-      <section className="py-16 bg-mono-800">
-        <div className="blesssed-container">
-          <h1 className="text-3xl md:text-5xl font-bold mb-4">LOOKBOOK</h1>
-          <p className="text-mono-400 max-w-2xl">
-            Explore our visual narrative, capturing the essence of blesssed streets across different environments and seasons.
-          </p>
-        </div>
-      </section>
-      
+      <PageHeader
+        title="LOOKBOOK"
+        description="Explore our visual narrative, capturing the essence of blesssed streets across different environments and seasons."
+      />
+
       {/* Lookbook Content */}
       <section className="py-16">
         <div className="blesssed-container">
@@ -87,7 +82,7 @@ const Lookbook = () => {
               <TabsTrigger value="winter">WINTER</TabsTrigger>
               <TabsTrigger value="limited">LIMITED</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="all" className="mt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {lookbookItems.map((item) => (
@@ -106,7 +101,7 @@ const Lookbook = () => {
                 ))}
               </div>
             </TabsContent>
-            
+
             <TabsContent value="essentials" className="mt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {lookbookItems
@@ -127,7 +122,7 @@ const Lookbook = () => {
                   ))}
               </div>
             </TabsContent>
-            
+
             <TabsContent value="winter" className="mt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {lookbookItems
@@ -148,7 +143,7 @@ const Lookbook = () => {
                   ))}
               </div>
             </TabsContent>
-            
+
             <TabsContent value="limited" className="mt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {lookbookItems

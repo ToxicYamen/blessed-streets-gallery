@@ -1,91 +1,86 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getAllProducts, Product } from '@/data/products';
 import ProductGrid from '@/components/product/ProductGrid';
-import { Input } from '@/components/ui/input';
+import { SearchInput } from '@/components/ui/search-input';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 const SearchResults = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const initialQuery = queryParams.get('q') || '';
-  
+
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [selectedSize, setSelectedSize] = useState<string>('all');
   const [selectedColor, setSelectedColor] = useState<string>('all');
   const [results, setResults] = useState<Product[]>([]);
-  
+
   useEffect(() => {
     // Perform the search when the component mounts or when search parameters change
     const performSearch = () => {
       const allProducts = getAllProducts();
-      
+
       // Filter products based on search query and selected filters
       const filteredProducts = allProducts.filter(product => {
-        const matchesQuery = initialQuery ? 
-          product.name.toLowerCase().includes(initialQuery.toLowerCase()) || 
+        const matchesQuery = initialQuery ?
+          product.name.toLowerCase().includes(initialQuery.toLowerCase()) ||
           product.description.toLowerCase().includes(initialQuery.toLowerCase()) : true;
-        
+
         const colorMatch = selectedColor === 'all' || product.color === selectedColor;
         const sizeMatch = selectedSize === 'all' || product.sizes.includes(selectedSize as any);
-        
+
         return matchesQuery && colorMatch && sizeMatch;
       });
-      
+
       setResults(filteredProducts);
     };
-    
+
     performSearch();
   }, [initialQuery, selectedColor, selectedSize]);
-  
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     // Update the URL with the new search query
     const newSearchParams = new URLSearchParams(location.search);
     newSearchParams.set('q', searchQuery);
     window.history.pushState({}, '', `${location.pathname}?${newSearchParams.toString()}`);
-    
+
     // Trigger a search with the updated query
     const allProducts = getAllProducts();
     const filteredProducts = allProducts.filter(product => {
-      const matchesQuery = searchQuery ? 
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      const matchesQuery = searchQuery ?
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description.toLowerCase().includes(searchQuery.toLowerCase()) : true;
-      
+
       const colorMatch = selectedColor === 'all' || product.color === selectedColor;
       const sizeMatch = selectedSize === 'all' || product.sizes.includes(selectedSize as any);
-      
+
       return matchesQuery && colorMatch && sizeMatch;
     });
-    
+
     setResults(filteredProducts);
   };
-  
+
   return (
     <div className="pt-24">
-      {/* Page Header */}
-      <section className="py-16 bg-mono-800">
-        <div className="blesssed-container">
-          <h1 className="text-3xl md:text-5xl font-bold mb-4">SEARCH RESULTS</h1>
-          <p className="text-mono-400 max-w-2xl mb-6">
-            {initialQuery ? `Results for "${initialQuery}"` : 'Browse all products'}
-          </p>
-          
-          {/* Search Form */}
-          <form onSubmit={handleSearch} className="flex gap-2 max-w-md">
-            <Input 
-              type="search" 
-              placeholder="Search for products..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-mono-900"
-            />
-            <Button type="submit">Search</Button>
-          </form>
-        </div>
-      </section>
-      
+      <PageHeader
+        title="SEARCH RESULTS"
+        description={initialQuery ? `Results for "${initialQuery}"` : 'Browse all products'}
+      >
+        {/* Search Form */}
+        <form onSubmit={handleSearch} className="flex gap-2 max-w-md mt-8">
+          <SearchInput
+            type="search"
+            placeholder="Search for products..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="bg-background/50 backdrop-blur border-black dark:border-white/10"
+          />
+          <Button type="submit">Search</Button>
+        </form>
+      </PageHeader>
+
       {/* Results Section */}
       <section className="py-16">
         <div className="blesssed-container">
@@ -93,15 +88,15 @@ const SearchResults = () => {
             {/* Filters */}
             <div className="w-full md:w-64 shrink-0">
               <h2 className="text-lg font-medium mb-4">FILTERS</h2>
-              
+
               <div className="mb-8">
                 <h3 className="text-sm uppercase text-mono-500 mb-3">Color</h3>
                 <div className="space-y-2">
                   <div className="flex items-center">
-                    <input 
-                      type="radio" 
-                      id="color-all" 
-                      name="color" 
+                    <input
+                      type="radio"
+                      id="color-all"
+                      name="color"
                       className="mr-2"
                       checked={selectedColor === 'all'}
                       onChange={() => setSelectedColor('all')}
@@ -109,10 +104,10 @@ const SearchResults = () => {
                     <label htmlFor="color-all" className="text-sm">All Colors</label>
                   </div>
                   <div className="flex items-center">
-                    <input 
-                      type="radio" 
-                      id="color-black" 
-                      name="color" 
+                    <input
+                      type="radio"
+                      id="color-black"
+                      name="color"
                       className="mr-2"
                       checked={selectedColor === 'black'}
                       onChange={() => setSelectedColor('black')}
@@ -120,10 +115,10 @@ const SearchResults = () => {
                     <label htmlFor="color-black" className="text-sm">Black</label>
                   </div>
                   <div className="flex items-center">
-                    <input 
-                      type="radio" 
-                      id="color-khaki" 
-                      name="color" 
+                    <input
+                      type="radio"
+                      id="color-khaki"
+                      name="color"
                       className="mr-2"
                       checked={selectedColor === 'khaki'}
                       onChange={() => setSelectedColor('khaki')}
@@ -132,15 +127,15 @@ const SearchResults = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="mb-8">
                 <h3 className="text-sm uppercase text-mono-500 mb-3">Size</h3>
                 <div className="space-y-2">
                   <div className="flex items-center">
-                    <input 
-                      type="radio" 
-                      id="size-all" 
-                      name="size" 
+                    <input
+                      type="radio"
+                      id="size-all"
+                      name="size"
                       className="mr-2"
                       checked={selectedSize === 'all'}
                       onChange={() => setSelectedSize('all')}
@@ -148,10 +143,10 @@ const SearchResults = () => {
                     <label htmlFor="size-all" className="text-sm">All Sizes</label>
                   </div>
                   <div className="flex items-center">
-                    <input 
-                      type="radio" 
-                      id="size-m" 
-                      name="size" 
+                    <input
+                      type="radio"
+                      id="size-m"
+                      name="size"
                       className="mr-2"
                       checked={selectedSize === 'M'}
                       onChange={() => setSelectedSize('M')}
@@ -159,10 +154,10 @@ const SearchResults = () => {
                     <label htmlFor="size-m" className="text-sm">M</label>
                   </div>
                   <div className="flex items-center">
-                    <input 
-                      type="radio" 
-                      id="size-l" 
-                      name="size" 
+                    <input
+                      type="radio"
+                      id="size-l"
+                      name="size"
                       className="mr-2"
                       checked={selectedSize === 'L'}
                       onChange={() => setSelectedSize('L')}
@@ -170,10 +165,10 @@ const SearchResults = () => {
                     <label htmlFor="size-l" className="text-sm">L</label>
                   </div>
                   <div className="flex items-center">
-                    <input 
-                      type="radio" 
-                      id="size-xl" 
-                      name="size" 
+                    <input
+                      type="radio"
+                      id="size-xl"
+                      name="size"
                       className="mr-2"
                       checked={selectedSize === 'XL'}
                       onChange={() => setSelectedSize('XL')}
@@ -182,8 +177,8 @@ const SearchResults = () => {
                   </div>
                 </div>
               </div>
-              
-              <button 
+
+              <button
                 className="text-sm underline text-mono-400"
                 onClick={() => {
                   setSelectedSize('all');
@@ -193,7 +188,7 @@ const SearchResults = () => {
                 Clear all filters
               </button>
             </div>
-            
+
             {/* Results */}
             <div className="flex-1">
               {results.length === 0 ? (

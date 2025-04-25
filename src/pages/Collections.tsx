@@ -1,8 +1,8 @@
-
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import AnimatedImage from '@/components/ui/AnimatedImage';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 interface Collection {
   id: string;
@@ -13,6 +13,7 @@ interface Collection {
 }
 
 const Collections = () => {
+  const navigate = useNavigate();
   // Mock collections data - in a real app, this would come from an API
   const [collections] = useState<Collection[]>([
     {
@@ -38,27 +39,26 @@ const Collections = () => {
     }
   ]);
 
+  const handleCollectionClick = (collectionId: string) => {
+    navigate(`/collections/${collectionId}`);
+  };
+
   return (
     <div className="pt-24">
-      {/* Page Header */}
-      <section className="py-16 bg-mono-800">
-        <div className="blesssed-container">
-          <h1 className="text-3xl md:text-5xl font-bold mb-4">COLLECTIONS</h1>
-          <p className="text-mono-400 max-w-2xl">
-            Explore our carefully curated collections, each representing a different facet of the blesssed streets vision.
-          </p>
-        </div>
-      </section>
-      
+      <PageHeader
+        title="COLLECTIONS"
+        description="Explore our carefully curated collections, each representing a different facet of the blesssed streets vision."
+      />
+
       {/* Collections Grid */}
       <section className="py-16">
         <div className="blesssed-container">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {collections.map((collection) => (
-              <Link 
-                to={`/collections/${collection.id}`} 
+              <div
                 key={collection.id}
-                className="group"
+                className="group cursor-pointer"
+                onClick={() => handleCollectionClick(collection.id)}
               >
                 <div className="mb-4 overflow-hidden rounded-xl">
                   <AnimatedImage
@@ -76,7 +76,7 @@ const Collections = () => {
                     View Collection <ArrowRight size={16} className="ml-1" />
                   </span>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         </div>

@@ -1,195 +1,581 @@
-
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { getProductById, getRelatedProducts } from '@/data/products';
-import ProductGrid from '@/components/product/ProductGrid';
-import AnimatedImage from '@/components/ui/AnimatedImage';
-import { ShoppingBag, Heart } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { getProductById, getRelatedProducts } from '../data/products';
+import ProductGrid from '../components/product/ProductGrid';
+import AnimatedImage from '../components/ui/AnimatedImage';
+import { ShoppingBag, Heart, ChevronLeft, Minus, Plus, X, ArrowLeft, ArrowRight } from 'lucide-react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "../components/ui/accordion";
+import { Button } from "../components/ui/button";
+// Shadcn Table Komponenten importieren
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
+// Shadcn Breadcrumb Komponenten importieren
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "../components/ui/breadcrumb";
+import { cartIconAnimation } from '@/lib/transitions';
+import { toast } from 'sonner';
+import { useCart } from '@/context/CartContext';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { cn } from '@/lib/utils';
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const product = id ? getProductById(id) : undefined;
   const relatedProducts = id ? getRelatedProducts(id, 4) : [];
-  
+  const navigate = useNavigate();
+
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<number>(0);
   const [quantity, setQuantity] = useState(1);
-  
-  const handleAddToCart = () => {
-    if (!selectedSize) {
-      alert('Please select a size');
+  const [isImageOpen, setIsImageOpen] = useState(false);
+  const [isHeartAnimating, setIsHeartAnimating] = useState(false);
+
+  const { addToCart, addToWishlist } = useCart();
+
+  // --- Definitionen ---
+  const productDetails = {
+    material: "57% Baumwolle, 43% Polyester",
+    fit: "Weit (oversize)",
+    cut: "Gerade",
+    length: "Lang",
+    sleeveLength: "Langarm",
+    modelInfo: "Unser Model ist 176 cm groß und trägt Größe M"
+  };
+
+  const productFeatures = {
+    collar: "Kapuze",
+    pockets: "Kängurutaschen",
+    pattern: "Stick",
+    details: "Elastischer Bund"
+  };
+
+  const careInstructions = "30 Grad, Maschinenwäsche, Buntwäsche, nicht bleichen, Für den Trockner nicht geeignet!";
+
+  const sizeGuide = {
+    M: { length: '73cm', shoulder: '61cm', chest: '62cm' },
+    L: { length: '75cm', shoulder: '63cm', chest: '64cm' },
+    XL: { length: '77cm', shoulder: '65cm', chest: '66cm' }
+  };
+  // --- Ende Definitionen ---
+
+  const handleQuantityChange = (e: React.MouseEvent, change: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (change === -1 && quantity <= 1) return;
+    setQuantity(prev => Math.max(1, prev + change));
+  };
+
+  const handleButtonClick = (handler: (e: React.MouseEvent) => void) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Prüfen ob das geklickte Element ein Button ist
+    if (!(e.target instanceof HTMLButtonElement)) {
       return;
     }
-    
-    console.log('Added to cart:', {
-      productId: product?.id,
+
+    if (!selectedSize) {
+      toast.error('Bitte wähle eine Größe aus');
+      return;
+    }
+
+    handler(e);
+  };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    if (!selectedSize || !product) return;
+
+    const cartItem = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
       size: selectedSize,
-      quantity,
-    });
-    
-    // Here you would typically add the item to your cart state or context
+      quantity: quantity,
+      image: product.images[0]
+    };
+
+    addToCart(cartItem);
+    setQuantity(1);
+    toast.success(`${quantity}x ${product.name} (Größe: ${selectedSize}) wurde zum Warenkorb hinzugefügt`);
   };
-  
-  const handleAddToWishlist = () => {
-    console.log('Added to wishlist:', product?.id);
-    // Here you would typically add the item to your wishlist state or context
+
+  const handleBuyNow = (e: React.MouseEvent) => {
+    if (!selectedSize || !product) return;
+
+    const cartItem = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      size: selectedSize,
+      quantity: quantity,
+      image: product.images[0]
+    };
+
+    addToCart(cartItem);
+    setQuantity(1);
+    navigate('/cart');
   };
-  
+
+  const handleAddToWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!product) return;
+
+    const wishlistItem = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      size: selectedSize || 'M', // Standardgröße, wenn keine ausgewählt
+      quantity: 1,
+      image: product.images[0]
+    };
+
+    setIsHeartAnimating(true);
+    setTimeout(() => setIsHeartAnimating(false), 1000);
+
+    addToWishlist(wishlistItem);
+    toast.success(`${product.name} wurde zur Wunschliste hinzugefügt`);
+  };
+
+  const handleSizeClick = (e: React.MouseEvent, size: string, isOutOfStock: boolean) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Prüfen ob das geklickte Element ein Button ist
+    if (!(e.target instanceof HTMLButtonElement) && !(e.target instanceof SVGElement)) {
+      return;
+    }
+
+    if (!isOutOfStock) {
+      setSelectedSize(size);
+    }
+  };
+
+  const handleImageClick = (image: string) => {
+    setSelectedImage(parseInt(image));
+    setIsImageOpen(true);
+  };
+
+  const nextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedImage((prev) => (prev + 1) % product.images.length);
+  };
+
+  const prevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedImage((prev) => (prev - 1 + product.images.length) % product.images.length);
+  };
+
   if (!product) {
     return (
       <div className="pt-24 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
           <p className="text-mono-400 mb-6">The product you're looking for doesn't exist or has been removed.</p>
-          <Link to="/shop" className="bg-mono-100 text-mono-900 px-6 py-3 inline-block hover:bg-mono-200 transition-colors">
+          <button
+            type="button"
+            onClick={() => navigate('/shop')}
+            className="bg-mono-100 text-mono-900 px-6 py-3 inline-block hover:bg-mono-200 transition-colors"
+          >
             Back to Shop
-          </Link>
+          </button>
         </div>
       </div>
     );
   }
-  
+
   return (
-    <div className="pt-24">
+    <div className="pt-24 bg-background text-foreground">
       <div className="blesssed-container py-12">
+        {/* Breadcrumb */}
+        <Breadcrumb className="mb-8">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbPage>Shop</BreadcrumbPage>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{product?.name}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           {/* Product Images */}
           <div className="space-y-4">
-            <div className="overflow-hidden">
-              <AnimatedImage
-                src={product.images[selectedImage]}
-                alt={`${product.name} in ${product.color}`}
-                aspectRatio="square"
-                priority
-              />
+            <div className="relative overflow-hidden bg-accent rounded-lg group">
+              <div onClick={() => setIsImageOpen(true)} className="cursor-zoom-in">
+                <AnimatedImage
+                  src={product.images[selectedImage]}
+                  alt={`${product.name} in ${product.color}`}
+                  aspectRatio="square"
+                  priority
+                />
+              </div>
+
+              {/* Previous Button */}
+              <button
+                onClick={prevImage}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors opacity-0 group-hover:opacity-100"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+
+              {/* Next Button */}
+              <button
+                onClick={nextImage}
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors opacity-0 group-hover:opacity-100"
+              >
+                <ArrowRight className="h-5 w-5" />
+              </button>
+
+              {/* Dots Navigation */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/50 rounded-full opacity-0 group-hover:opacity-100">
+                {product.images.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedImage(index);
+                    }}
+                    className={`w-1.5 h-1.5 rounded-full transition-colors ${index === selectedImage ? 'bg-white' : 'bg-white/50'
+                      }`}
+                  />
+                ))}
+              </div>
             </div>
-            
+
             <div className="grid grid-cols-4 gap-2">
               {product.images.map((image, index) => (
-                <button
+                <div
                   key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`block border ${
-                    index === selectedImage ? 'border-mono-100' : 'border-mono-700'
-                  }`}
+                  className="cursor-zoom-in"
+                  onClick={() => handleImageClick(index.toString())}
                 >
-                  <img 
-                    src={image} 
+                  <img
+                    src={image}
                     alt={`${product.name} in ${product.color} - view ${index + 1}`}
                     className="w-full h-full object-cover aspect-square"
                   />
-                </button>
+                </div>
               ))}
             </div>
           </div>
-          
+
           {/* Product Info */}
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">{product.name}</h1>
-            <p className="text-mono-400 capitalize mb-6">{product.color}</p>
-            
-            <p className="text-xl font-medium mb-6">€{product.price}</p>
-            
-            <div className="mb-8">
-              <h2 className="text-sm font-medium mb-2">Size</h2>
+            <h1 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">{product.name}</h1>
+            <p className="text-muted-foreground capitalize mb-6">{product.color}</p>
+
+            <p className="text-xl font-medium mb-6 text-foreground">€{product.price}</p>
+
+            {/* Size Selection */}
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-sm font-medium text-foreground">Größe</h2>
+                {!selectedSize && (
+                  <p className="text-sm text-red-500">Bitte wähle eine Größe aus</p>
+                )}
+              </div>
               <div className="flex gap-3 mb-2">
-                {product.inventory.map((item) => {
+                {product?.inventory.map((item) => {
                   const isOutOfStock = item.quantity === 0;
                   const isSelected = selectedSize === item.size;
-                  
+
                   return (
                     <button
                       key={item.size}
-                      onClick={() => setSelectedSize(isOutOfStock ? null : item.size)}
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (!isOutOfStock) {
+                          setSelectedSize(item.size);
+                        }
+                      }}
                       disabled={isOutOfStock}
-                      className={`w-12 h-12 flex items-center justify-center border ${
-                        isSelected 
-                          ? 'border-mono-100 bg-mono-800' 
-                          : isOutOfStock 
-                          ? 'border-mono-700 bg-mono-800/50 text-mono-600 cursor-not-allowed' 
-                          : 'border-mono-700 hover:border-mono-400'
-                      }`}
+                      className={`w-12 h-10 rounded-md border ${isSelected
+                        ? 'bg-foreground text-background hover:bg-foreground/90 border-white'
+                        : 'bg-background text-foreground border-white hover:bg-accent'
+                        } ${isOutOfStock
+                          ? 'relative after:content-[""] after:absolute after:left-0 after:top-1/2 after:w-full after:h-[1px] after:bg-muted after:rotate-[-45deg] text-muted-foreground cursor-not-allowed hover:bg-transparent'
+                          : ''
+                        }`}
                     >
                       {item.size}
                     </button>
                   );
                 })}
               </div>
-              <p className="text-xs text-mono-500">
-                {selectedSize 
-                  ? `${product.inventory.find(i => i.size === selectedSize)?.quantity} in stock` 
-                  : 'Select a size'}
-              </p>
             </div>
-            
-            <div className="mb-8">
-              <h2 className="text-sm font-medium mb-2">Quantity</h2>
-              <div className="flex border border-mono-700">
-                <button 
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-12 h-12 flex items-center justify-center text-lg"
+
+            {/* Quantity */}
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-sm font-medium text-foreground">Menge</h2>
+              </div>
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  className={`w-8 h-8 flex items-center justify-center border border-white rounded-md text-foreground hover:bg-accent ${quantity <= 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  onClick={(e) => handleQuantityChange(e, -1)}
                   disabled={quantity <= 1}
                 >
-                  -
+                  <Minus className="h-4 w-4" />
                 </button>
-                <div className="w-12 h-12 flex items-center justify-center border-l border-r border-mono-700">
-                  {quantity}
-                </div>
-                <button 
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="w-12 h-12 flex items-center justify-center text-lg"
-                  disabled={quantity >= (selectedSize ? product.inventory.find(i => i.size === selectedSize)?.quantity || 0 : 0)}
+                <span className="w-8 text-center text-foreground">{quantity}</span>
+                <button
+                  type="button"
+                  className="w-8 h-8 flex items-center justify-center border border-white rounded-md text-foreground hover:bg-accent cursor-pointer"
+                  onClick={(e) => handleQuantityChange(e, 1)}
                 >
-                  +
+                  <Plus className="h-4 w-4" />
                 </button>
               </div>
             </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              <button
-                onClick={handleAddToCart}
-                disabled={!selectedSize}
-                className="flex-1 bg-mono-100 text-mono-900 py-3 flex items-center justify-center gap-2 hover:bg-mono-200 transition-colors disabled:bg-mono-500 disabled:cursor-not-allowed"
-              >
-                <ShoppingBag size={16} />
-                Add to Cart
-              </button>
-              
-              <button
-                onClick={handleAddToWishlist}
-                className="flex-1 border border-mono-400 py-3 flex items-center justify-center gap-2 hover:bg-mono-800 transition-colors"
-              >
-                <Heart size={16} />
-                Add to Wishlist
-              </button>
-            </div>
-            
-            <div className="border-t border-mono-800 pt-6">
-              <p className="mb-6">{product.description}</p>
-              
-              <div className="space-y-4 text-sm">
-                <p>
-                  <span className="text-mono-400">Color:</span> {product.color}
-                </p>
-                <p>
-                  <span className="text-mono-400">Sizes:</span> {product.sizes.join(", ")}
-                </p>
-                <p>
-                  <span className="text-mono-400">Product ID:</span> {product.id}
-                </p>
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-[1fr,auto] gap-4 mb-8">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={!selectedSize}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md border border-white ${!selectedSize
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50'
+                    : 'bg-foreground text-background hover:bg-foreground/90'
+                    }`}
+                  onClick={(e) => handleButtonClick(handleAddToCart)(e)}
+                >
+                  <ShoppingBag className="h-4 w-4" />
+                  <span className="hidden md:inline">In den Warenkorb</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={!selectedSize}
+                  className={`flex-1 px-4 py-2 rounded-md flex items-center justify-center border border-white ${!selectedSize
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50'
+                    : 'bg-accent text-foreground hover:bg-accent/90'
+                    }`}
+                  onClick={(e) => handleButtonClick(handleBuyNow)(e)}
+                >
+                  Jetzt Kaufen
+                </button>
               </div>
+              <button
+                type="button"
+                className="w-10 h-10 flex items-center justify-center border border-white rounded-md text-foreground hover:bg-accent relative"
+                onClick={handleAddToWishlist}
+              >
+                <Heart className={cn(
+                  "h-4 w-4 transition-all duration-300",
+                  isHeartAnimating && "scale-125 fill-red-500 text-red-500 animate-[pulse_1s_ease-in-out]"
+                )} />
+                {isHeartAnimating && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="absolute w-8 h-8 bg-red-500/20 rounded-full animate-ping" />
+                  </div>
+                )}
+              </button>
             </div>
+
+            {/* Product Details Accordion */}
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="item-1" className="border-border">
+                <AccordionTrigger className="hover:bg-accent text-foreground">Produktdetails</AccordionTrigger>
+                <AccordionContent className="bg-background">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Kragen</span>
+                      <span className="text-foreground">{productFeatures.collar}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Taschen</span>
+                      <span className="text-foreground">{productFeatures.pockets}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Muster</span>
+                      <span className="text-foreground">{productFeatures.pattern}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Details</span>
+                      <span className="text-foreground">{productFeatures.details}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Material</span>
+                      <span className="text-foreground">{productDetails.material}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Passform</span>
+                      <span className="text-foreground">{productDetails.fit}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Schnitt</span>
+                      <span className="text-foreground">{productDetails.cut}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Länge</span>
+                      <span className="text-foreground">{productDetails.length}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Armlänge</span>
+                      <span className="text-foreground">{productDetails.sleeveLength}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Modelgröße</span>
+                      <span className="text-foreground">{productDetails.modelInfo}</span>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-2" className="border-border">
+                <AccordionTrigger className="hover:bg-accent text-foreground">Versandinformationen</AccordionTrigger>
+                <AccordionContent className="bg-background">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Versandzeit</span>
+                      <span className="text-foreground">2-4 Werktage</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Versandkosten</span>
+                      <span className="text-foreground">Kostenloser Versand</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Lieferung</span>
+                      <span className="text-foreground">DHL, Hermes</span>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-3" className="border-border">
+                <AccordionTrigger className="hover:bg-accent text-foreground">Größentabelle</AccordionTrigger>
+                <AccordionContent className="bg-background">
+                  <div className="space-y-2 text-sm">
+                    {Object.entries(sizeGuide).map(([size, measurements]) => (
+                      <div key={size} className="grid grid-cols-4 gap-4 py-2 border-b border-border last:border-0">
+                        <div className="text-muted-foreground">Größe {size}</div>
+                        <div className="text-foreground">{measurements.length}</div>
+                        <div className="text-foreground">{measurements.shoulder}</div>
+                        <div className="text-foreground">{measurements.chest}</div>
+                      </div>
+                    ))}
+                    <div className="grid grid-cols-4 gap-4 text-muted-foreground text-xs mt-2">
+                      <div></div>
+                      <div>Länge</div>
+                      <div>Schulter</div>
+                      <div>Brust</div>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-4" className="border-border">
+                <AccordionTrigger className="hover:bg-accent text-foreground">Pflegehinweise</AccordionTrigger>
+                <AccordionContent className="bg-background">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Waschen</span>
+                      <span className="text-foreground">30 Grad</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Programm</span>
+                      <span className="text-foreground">Buntwäsche</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Bleichen</span>
+                      <span className="text-foreground">Nicht bleichen</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Trocknen</span>
+                      <span className="text-foreground">Nicht trocknergeeignet</span>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
         </div>
-        
+
         {/* Related Products */}
         {relatedProducts.length > 0 && (
-          <div className="mt-24">
-            <h2 className="text-2xl font-bold mb-8">You may also like</h2>
+          <div className="mt-16">
+            <h2 className="text-2xl font-bold mb-8 text-foreground">Ähnliche Produkte</h2>
             <ProductGrid products={relatedProducts} />
           </div>
         )}
       </div>
+
+      {/* Image Modal */}
+      <Dialog open={isImageOpen} onOpenChange={setIsImageOpen}>
+        <DialogContent className="max-w-[95vw] h-[95vh] w-full p-0 bg-transparent border-none">
+          <div className="relative w-full h-full flex items-center justify-center">
+            {/* Close Button */}
+            <button
+              onClick={() => setIsImageOpen(false)}
+              className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+            >
+              <X className="h-6 w-6" />
+            </button>
+
+            {/* Previous Button */}
+            <button
+              onClick={prevImage}
+              className="absolute left-4 z-50 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+            >
+              <ArrowLeft className="h-6 w-6" />
+            </button>
+
+            {/* Image */}
+            <img
+              src={product.images[selectedImage]}
+              alt={product.name}
+              className="max-w-full max-h-full object-contain"
+            />
+
+            {/* Next Button */}
+            <button
+              onClick={nextImage}
+              className="absolute right-4 z-50 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+            >
+              <ArrowRight className="h-6 w-6" />
+            </button>
+
+            {/* Thumbnails */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/50 rounded-full">
+              {product.images.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedImage(index);
+                  }}
+                  className={`w-2 h-2 rounded-full transition-colors ${index === selectedImage ? 'bg-white' : 'bg-white/50'
+                    }`}
+                />
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
