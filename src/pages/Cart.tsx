@@ -1,15 +1,13 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Minus, Plus, Trash2, ArrowLeft } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { BackgroundGradient } from '@/components/ui/background-gradient';
-import { pageTransition } from '@/lib/transitions';
 
 const Cart = () => {
   const { cartItems, updateCartItemQuantity, removeFromCart } = useCart();
-  const navigate = useNavigate();
 
   const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
 
@@ -26,12 +24,6 @@ const Cart = () => {
   const handleRemove = (itemId: string, size: string) => {
     removeFromCart(itemId, size);
     toast.success('Artikel wurde aus dem Warenkorb entfernt');
-  };
-
-  const handleCheckout = async () => {
-    await pageTransition(() => {
-      navigate('/checkout');
-    });
   };
 
   return (
@@ -133,10 +125,7 @@ const Cart = () => {
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={handleCheckout}
-                  className="w-full bg-black text-white dark:bg-white dark:text-black h-11 rounded-lg font-medium transition-all hover:scale-105"
-                >
+                <button className="w-full bg-black text-white dark:bg-white dark:text-black h-11 rounded-lg font-medium transition-all hover:scale-105">
                   Proceed to Checkout
                 </button>
                 <p className="text-xs text-center text-muted-foreground mt-2">

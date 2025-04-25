@@ -9,7 +9,6 @@ import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { useEffect, useRef, useState } from "react";
 import { pageTransition } from "@/lib/transitions";
 import { CartProvider } from '@/context/CartContext';
-import { BackgroundGrid } from "@/components/ui/background-grid";
 import './i18n/config';
 
 // Pages
@@ -23,7 +22,6 @@ import Wishlist from "./pages/Wishlist";
 import Cart from "./pages/Cart";
 import About from "./pages/About";
 import SearchResults from "./pages/SearchResults";
-import CheckoutPage from "./pages/CheckoutPage";
 
 // Auth Pages
 import Login from "@/pages/auth/Login";
@@ -80,34 +78,30 @@ const AppContent = () => {
   }, [navigate, isTransitioning]);
 
   return (
-    <div className="min-h-screen flex flex-col relative">
-      <BackgroundGrid />
-      <div className="relative z-10">
-        <Header />
-        <main ref={mainRef} className="flex-1">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/shop" element={<Shop />} />
-            <Route path="/collections" element={<Collections />} />
-            <Route path="/product/:id" element={<ProductDetail />} />
-            <Route path="/lookbook" element={<Lookbook />} />
-            <Route path="/wishlist" element={<Wishlist />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/search" element={<SearchResults />} />
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main ref={mainRef} className="flex-1">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/shop" element={<Shop />} />
+          <Route path="/collections" element={<Collections />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/lookbook" element={<Lookbook />} />
+          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/search" element={<SearchResults />} />
 
-            {/* Auth Routes */}
-            <Route path="/auth/login" element={<Login />} />
-            <Route path="/auth/register" element={<Register />} />
-            <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+          {/* Auth Routes */}
+          <Route path="/auth/login" element={<Login />} />
+          <Route path="/auth/register" element={<Register />} />
+          <Route path="/auth/forgot-password" element={<ForgotPassword />} />
 
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+      <Footer />
     </div>
   );
 };
