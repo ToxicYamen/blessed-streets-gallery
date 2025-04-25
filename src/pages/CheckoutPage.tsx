@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { CreditCard, Wallet } from 'lucide-react';
 
 const CheckoutPage = () => {
     const { cartItems: cart } = useCart();
@@ -83,24 +82,24 @@ const CheckoutPage = () => {
                                 onValueChange={setPaymentMethod}
                                 className="space-y-4"
                             >
-                                <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-accent/5 cursor-pointer">
+                                <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="card" id="card" />
-                                    <Label htmlFor="card" className="flex items-center gap-2 cursor-pointer">
-                                        <CreditCard className="w-5 h-5" />
+                                    <Label htmlFor="card" className="flex items-center gap-2">
+                                        <img src="/credit-card.svg" alt="Credit Card" className="w-6 h-6" />
                                         Credit Card
                                     </Label>
                                 </div>
-                                <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-accent/5 cursor-pointer">
+                                <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="klarna" id="klarna" />
-                                    <Label htmlFor="klarna" className="flex items-center gap-2 cursor-pointer">
-                                        <Wallet className="w-5 h-5" />
+                                    <Label htmlFor="klarna" className="flex items-center gap-2">
+                                        <img src="/klarna.svg" alt="Klarna" className="w-6 h-6" />
                                         Klarna
                                     </Label>
                                 </div>
-                                <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-accent/5 cursor-pointer">
+                                <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="paypal" id="paypal" />
-                                    <Label htmlFor="paypal" className="flex items-center gap-2 cursor-pointer">
-                                        <Wallet className="w-5 h-5" />
+                                    <Label htmlFor="paypal" className="flex items-center gap-2">
+                                        <img src="/paypal.svg" alt="PayPal" className="w-6 h-6" />
                                         PayPal
                                     </Label>
                                 </div>
