@@ -20,8 +20,8 @@ const Shop = () => {
   return (
     <div className="pt-24">
       <PageHeader
-        title="SHOP ALL"
-        description="Browse our complete collection of premium streetwear, designed for those who value quality and minimalist aesthetics."
+        title="Shop"
+        description="Entdecke unsere neueste Kollektion von Premium Streetwear."
       />
 
       {/* Products Section */}

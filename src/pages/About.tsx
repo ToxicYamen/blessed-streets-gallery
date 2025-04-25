@@ -8,8 +8,8 @@ const About = () => {
   return (
     <div className="pt-24">
       <PageHeader
-        title="ABOUT US"
-        description="The story behind blesssed streets and our mission to elevate street fashion."
+        title="About"
+        description="Über Blessed Streets"
       />
 
       {/* Brand Story */}

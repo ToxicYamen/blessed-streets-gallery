@@ -218,7 +218,7 @@ const ProductDetail = () => {
   }
 
   return (
-    <div className="pt-24 bg-background text-foreground">
+    <div className="pt-24">
       <div className="blesssed-container py-12">
         {/* Breadcrumb */}
         <Breadcrumb className="mb-8">
@@ -236,7 +236,7 @@ const ProductDetail = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           {/* Product Images */}
           <div className="space-y-4">
-            <div className="relative overflow-hidden bg-accent rounded-lg group">
+            <div className="relative overflow-hidden bg-accent/5 rounded-lg group">
               <div onClick={() => setIsImageOpen(true)} className="cursor-zoom-in">
                 <AnimatedImage
                   src={product.images[selectedImage]}

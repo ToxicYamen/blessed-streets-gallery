@@ -1,6 +1,5 @@
-import create from 'zustand';
-import { PersistOptions, persist } from 'zustand/middleware';
-import { StateCreator } from 'zustand';
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export interface CartItem {
     id: string;
@@ -29,42 +28,8 @@ interface CartActions {
 
 type CartStore = CartState & CartActions;
 
-type CartPersist = (
-    config: StateCreator<CartStore>,
-    options: PersistOptions<CartStore>
-) => StateCreator<CartStore>;
-
-const storage = {
-    getItem: (name: string): string | null => {
-        try {
-            const item = localStorage.getItem(name);
-            console.log('Getting from storage:', name, item);
-            return item;
-        } catch (error) {
-            console.error('Error getting from storage:', error);
-            return null;
-        }
-    },
-    setItem: (name: string, value: string): void => {
-        try {
-            console.log('Setting in storage:', name, value);
-            localStorage.setItem(name, value);
-        } catch (error) {
-            console.error('Error setting in storage:', error);
-        }
-    },
-    removeItem: (name: string): void => {
-        try {
-            console.log('Removing from storage:', name);
-            localStorage.removeItem(name);
-        } catch (error) {
-            console.error('Error removing from storage:', error);
-        }
-    }
-};
-
-export const useCartStore = create<CartStore>(
-    (persist as CartPersist)(
+export const useCartStore = create<CartStore>()(
+    persist(
         (set, get) => ({
             items: [],
             wishlistItems: [],
@@ -161,7 +126,6 @@ export const useCartStore = create<CartStore>(
         }),
         {
             name: 'cart-storage',
-            getStorage: () => storage
         }
     )
 ); 
