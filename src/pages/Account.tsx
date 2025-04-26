@@ -1,16 +1,11 @@
-
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { getUserOrders } from '@/services/orders';
-import { Order, parseOrderItems, CartItem } from '@/types/order';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-// Update Profile interface to include avatar_url
 interface Profile {
   id: string;
   email: string;
@@ -18,9 +13,17 @@ interface Profile {
   last_name: string | null;
   phone: string | null;
   address: string | null;
-  avatar_url: string | null;
-  created_at: string | null;
-  updated_at: string | null;
+}
+
+interface Order {
+  id: string;
+  total: number;
+  status: string;
+  created_at: string;
+  items: CartItem[];
+  shipping_address: string;
+  payment_method: string;
+  estimated_delivery: string;
 }
 
 const Account = () => {
@@ -35,9 +38,6 @@ const Account = () => {
     phone: '',
     address: '',
   });
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   useEffect(() => {
     checkUser();
@@ -64,28 +64,35 @@ const Account = () => {
         .single();
 
       if (error) throw error;
-      
-      // Ensure all properties are set, including avatar_url
-      setProfile({
-        ...data,
-        avatar_url: data.avatar_url || null,
-        first_name: data.first_name || '',
-        last_name: data.last_name || '',
-        phone: data.phone || '',
-        address: data.address || '',
-      });
-
+      setProfile(data);
       setFormData({
         first_name: data.first_name || '',
         last_name: data.last_name || '',
         phone: data.phone || '',
         address: data.address || '',
       });
-      setAvatarUrl(data.avatar_url);
     } catch (error: any) {
       toast.error(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setOrders(data || []);
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
@@ -94,86 +101,18 @@ const Account = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return;
 
-      // Prepare updates, explicitly including avatar_url if needed
-      const updates: Partial<Profile> = { 
-        ...formData,
-        avatar_url: avatarUrl 
-      };
-      
       const { error } = await supabase
         .from('profiles')
-        .update(updates)
+        .update(formData)
         .eq('id', session.user.id);
 
       if (error) throw error;
-      
-      // Then upload avatar if selected
-      if (avatarFile) {
-        await uploadAvatar(session.user.id, avatarFile);
-      }
       
       toast.success('Profile updated successfully');
       setEditing(false);
       fetchProfile();
     } catch (error: any) {
       toast.error(error.message);
-    }
-  };
-
-  const uploadAvatar = async (userId: string, file: File) => {
-    try {
-      setUploadingAvatar(true);
-      
-      // Upload file to storage
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${userId}/avatar.${fileExt}`;
-      
-      // Check if bucket exists, if not create it
-      const { data: bucketData } = await supabase.storage.getBucket('avatars');
-      if (!bucketData) {
-        await supabase.storage.createBucket('avatars', {
-          public: true,
-          fileSizeLimit: 1024 * 1024 * 2 // 2MB
-        });
-      }
-      
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
-      
-      if (uploadError) throw uploadError;
-      
-      // Get public URL
-      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
-      
-      // Update profile with avatar URL
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: data.publicUrl })
-        .eq('id', userId);
-      
-      if (updateError) throw updateError;
-      
-      setAvatarUrl(data.publicUrl);
-      
-    } catch (error: any) {
-      toast.error(`Error uploading avatar: ${error.message}`);
-    } finally {
-      setUploadingAvatar(false);
-    }
-  };
-
-  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0];
-      setAvatarFile(file);
-      
-      // Show preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -184,21 +123,6 @@ const Account = () => {
     } else {
       navigate('/');
     }
-  };
-  
-  const viewOrderReceipt = (order: Order) => {
-    // Open a modal with receipt details
-    // For now we'll just show a toast
-    toast(`Receipt for order #${order.id.slice(0, 8)}`, {
-      description: `Total: ${order.total.toFixed(2)} €, Items: ${order.items.length}, Date: ${new Date(order.created_at).toLocaleDateString()}`
-    });
-  };
-  
-  const trackOrder = (order: Order) => {
-    // For now show tracking info in a toast
-    toast(`Tracking order #${order.id.slice(0, 8)}`, {
-      description: `Status: ${order.status}, Estimated delivery: ${new Date(order.estimated_delivery).toLocaleDateString()}`
-    });
   };
 
   if (loading) {
@@ -220,20 +144,6 @@ const Account = () => {
               <h3 className="text-lg font-semibold mb-4">Profile Information</h3>
               {editing ? (
                 <div className="space-y-4">
-                  <div className="flex flex-col items-center mb-6">
-                    <Avatar className="w-24 h-24 mb-4">
-                      <AvatarImage src={avatarUrl || ''} alt="Profile" />
-                      <AvatarFallback>
-                        {profile?.first_name?.charAt(0)}{profile?.last_name?.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Input 
-                      type="file" 
-                      accept="image/*" 
-                      onChange={handleAvatarChange}
-                      className="w-full max-w-xs"
-                    />
-                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <Input
                       placeholder="First Name"
@@ -257,28 +167,16 @@ const Account = () => {
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   />
                   <div className="flex gap-2">
-                    <Button onClick={handleUpdateProfile} disabled={uploadingAvatar}>
-                      {uploadingAvatar ? 'Uploading...' : 'Save Changes'}
-                    </Button>
+                    <Button onClick={handleUpdateProfile}>Save Changes</Button>
                     <Button variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
                   </div>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="w-24 h-24">
-                      <AvatarImage src={profile?.avatar_url || ''} alt="Profile" />
-                      <AvatarFallback>
-                        {profile?.first_name?.charAt(0)}{profile?.last_name?.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p><strong>Email:</strong> {profile?.email}</p>
-                      <p><strong>Name:</strong> {profile?.first_name} {profile?.last_name}</p>
-                      <p><strong>Phone:</strong> {profile?.phone || 'Not set'}</p>
-                      <p><strong>Address:</strong> {profile?.address || 'Not set'}</p>
-                    </div>
-                  </div>
+                  <p><strong>Email:</strong> {profile?.email}</p>
+                  <p><strong>Name:</strong> {profile?.first_name} {profile?.last_name}</p>
+                  <p><strong>Phone:</strong> {profile?.phone || 'Not set'}</p>
+                  <p><strong>Address:</strong> {profile?.address || 'Not set'}</p>
                   <Button onClick={() => setEditing(true)}>Edit Profile</Button>
                 </div>
               )}
@@ -297,7 +195,7 @@ const Account = () => {
                         <div>
                           <p className="font-medium">Order #{order.id.slice(0, 8)}</p>
                           <p className="text-sm text-muted-foreground">
-                            {new Date(order.created_at).toLocaleDateString()} {new Date(order.created_at).toLocaleTimeString()}
+                            {new Date(order.created_at).toLocaleDateString()}
                           </p>
                         </div>
                         <div className="text-right">
@@ -328,10 +226,6 @@ const Account = () => {
                         <p><strong>Shipping Address:</strong> {order.shipping_address}</p>
                         <p><strong>Payment Method:</strong> {order.payment_method}</p>
                         <p><strong>Estimated Delivery:</strong> {new Date(order.estimated_delivery).toLocaleDateString()}</p>
-                      </div>
-                      <div className="flex gap-2 mt-4">
-                        <Button size="sm" onClick={() => trackOrder(order)}>Track</Button>
-                        <Button size="sm" variant="outline" onClick={() => viewOrderReceipt(order)}>Receipt</Button>
                       </div>
                     </div>
                   ))}

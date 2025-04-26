@@ -1,10 +1,8 @@
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '@/lib/store/cart';
 import { createOrder } from '@/services/orders';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -17,45 +15,13 @@ const CheckoutPage = () => {
     expiryDate: '',
     cvv: ''
   });
-  const [loading, setLoading] = useState(false);
-
-  // Load the user's saved address if available
-  useEffect(() => {
-    const fetchUserAddress = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('address')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (data?.address) {
-          setShippingAddress(data.address);
-        }
-      }
-    };
-    
-    fetchUserAddress();
-  }, []);
 
   const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
 
   const handleSubmitOrder = async () => {
     try {
-      setLoading(true);
-      
       if (!shippingAddress) {
         toast.error('Please enter a shipping address');
-        setLoading(false);
-        return;
-      }
-
-      // Check if user is logged in
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error('Please log in to complete your purchase');
-        navigate('/auth/login');
         return;
       }
 
@@ -68,12 +34,6 @@ const CheckoutPage = () => {
           paymentMethod
         });
 
-        // Save the shipping address to the user's profile
-        await supabase
-          .from('profiles')
-          .update({ address: shippingAddress })
-          .eq('id', session.user.id);
-
         clearCart();
         toast.success('Order placed successfully!');
         navigate('/account');
@@ -82,8 +42,6 @@ const CheckoutPage = () => {
       }
     } catch (error: any) {
       toast.error(error.message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -209,7 +167,6 @@ const CheckoutPage = () => {
                     value={paymentDetails.cardNumber}
                     onChange={(e) => setPaymentDetails({ ...paymentDetails, cardNumber: e.target.value })}
                   />
-                  <p className="text-sm mt-1 text-gray-500">For testing, use: 4242 4242 4242 4242</p>
                 </div>
 
                 <div>
@@ -260,10 +217,7 @@ const CheckoutPage = () => {
 
             <button
               onClick={handleSubmitOrder}
-              disabled={loading}
               className={`w-full font-medium rounded-lg py-2.5 mt-6 transition-colors ${
-                loading ? 'opacity-70 cursor-not-allowed' : ''
-              } ${
                 paymentMethod === 'paypal'
                   ? 'bg-[#0070BA] hover:bg-[#003087] text-white'
                   : paymentMethod === 'klarna'
@@ -271,12 +225,11 @@ const CheckoutPage = () => {
                     : 'bg-black dark:bg-white text-white dark:text-black hover:bg-gray-900 dark:hover:bg-gray-100'
               }`}
             >
-              {loading ? 'Processing...' : 
-                paymentMethod === 'card'
-                  ? `Pay ${subtotal.toFixed(2)} €`
-                  : paymentMethod === 'paypal'
-                    ? 'Continue with PayPal'
-                    : 'Continue with Klarna'
+              {paymentMethod === 'card'
+                ? `Pay ${subtotal.toFixed(2)} €`
+                : paymentMethod === 'paypal'
+                  ? 'Continue with PayPal'
+                  : 'Continue with Klarna'
               }
             </button>
 
