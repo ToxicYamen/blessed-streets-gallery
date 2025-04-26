@@ -9,6 +9,8 @@ import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
 import { cartIconAnimation, pageTransition } from '@/lib/transitions';
 import { useCart } from '@/context/CartContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import '@/i18n/config';
 
 export const Header = () => {
@@ -27,6 +29,8 @@ export const Header = () => {
   const navigate = useNavigate();
   const { cartItems } = useCart();
   const [isDarkMode, setIsDarkMode] = useState(document.documentElement.classList.contains('dark'));
+  const [user, setUser] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -68,6 +72,50 @@ export const Header = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    const checkUserAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+      
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      }
+    };
+    
+    checkUserAuth();
+    
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setUser(session?.user || null);
+        
+        if (session?.user) {
+          fetchUserProfile(session.user.id);
+        } else {
+          setUserProfile(null);
+        }
+      }
+    );
+    
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error) throw error;
+      setUserProfile(data);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
 
   const toggleMenu = () => {
     if (isMenuOpen) {
@@ -271,17 +319,28 @@ export const Header = () => {
               )}
             </div>
 
-            {/* User Button */}
-            <Link to="/auth/login" className="hidden md:block" data-navigation="true">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white"
-                data-navigation="true"
-              >
-                <User className="h-4 w-4" />
-              </Button>
-            </Link>
+            {/* User Button/Avatar */}
+            {user ? (
+              <Link to="/account" data-navigation="true">
+                <Avatar className="w-8 h-8 cursor-pointer">
+                  <AvatarImage src={userProfile?.avatar_url || ''} alt="Profile" />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                    {userProfile?.first_name?.charAt(0)}{userProfile?.last_name?.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+            ) : (
+              <Link to="/auth/login" className="hidden md:block" data-navigation="true">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white"
+                  data-navigation="true"
+                >
+                  <User className="h-4 w-4" />
+                </Button>
+              </Link>
+            )}
 
             {/* Mobile Menu Button */}
             <button
@@ -312,6 +371,29 @@ export const Header = () => {
             </div>
 
             <nav className="flex flex-col space-y-8 mt-16 text-2xl font-medium">
+              {user && userProfile && (
+                <div className="flex items-center gap-4 mb-4">
+                  <Avatar className="w-10 h-10">
+                    <AvatarImage src={userProfile?.avatar_url || ''} alt="Profile" />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                      {userProfile?.first_name?.charAt(0)}{userProfile?.last_name?.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="text-white text-base">
+                    <p>{userProfile.first_name} {userProfile.last_name}</p>
+                    <button 
+                      className="text-sm text-white/70"
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        navigate('/account');
+                      }}
+                    >
+                      View Account
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <button
                 className="text-white text-left"
                 onClick={() => handleNavClick('/shop')}
@@ -348,12 +430,24 @@ export const Header = () => {
               >
                 {t('navigation.wishlist')}
               </button>
-              <button
-                className="text-white text-left"
-                onClick={() => handleNavClick('/auth/login')}
-              >
-                {t('navigation.login')}
-              </button>
+              {!user ? (
+                <button
+                  className="text-white text-left"
+                  onClick={() => handleNavClick('/auth/login')}
+                >
+                  {t('navigation.login')}
+                </button>
+              ) : (
+                <button
+                  className="text-white text-left"
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    handleNavClick('/');
+                  }}
+                >
+                  Sign Out
+                </button>
+              )}
             </nav>
 
             <div className="mt-auto pb-8 text-sm text-white/50">
