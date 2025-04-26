@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { getUserOrders } from '@/services/orders';
 import { Order, parseOrderItems, CartItem } from '@/types/order';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
+// Update Profile interface to include avatar_url
 interface Profile {
   id: string;
   email: string;
@@ -18,6 +19,8 @@ interface Profile {
   phone: string | null;
   address: string | null;
   avatar_url: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 const Account = () => {
@@ -61,7 +64,17 @@ const Account = () => {
         .single();
 
       if (error) throw error;
-      setProfile(data);
+      
+      // Ensure all properties are set, including avatar_url
+      setProfile({
+        ...data,
+        avatar_url: data.avatar_url || null,
+        first_name: data.first_name || '',
+        last_name: data.last_name || '',
+        phone: data.phone || '',
+        address: data.address || '',
+      });
+
       setFormData({
         first_name: data.first_name || '',
         last_name: data.last_name || '',
@@ -76,30 +89,17 @@ const Account = () => {
     }
   };
 
-  const fetchOrders = async () => {
-    try {
-      const data = await getUserOrders();
-      
-      // Transform the data to ensure items is properly typed
-      const parsedOrders = data.map(order => ({
-        ...order,
-        items: parseOrderItems(order.items)
-      })) as Order[];
-      
-      setOrders(parsedOrders);
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-  };
-
   const handleUpdateProfile = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return;
 
-      const updates = { ...formData };
+      // Prepare updates, explicitly including avatar_url if needed
+      const updates: Partial<Profile> = { 
+        ...formData,
+        avatar_url: avatarUrl 
+      };
       
-      // First update profile data
       const { error } = await supabase
         .from('profiles')
         .update(updates)
