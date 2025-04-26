@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,6 +20,10 @@ interface Order {
   total: number;
   status: string;
   created_at: string;
+  items: CartItem[];
+  shipping_address: string;
+  payment_method: string;
+  estimated_delivery: string;
 }
 
 const Account = () => {
@@ -188,7 +191,7 @@ const Account = () => {
                 <div className="space-y-4">
                   {orders.map((order) => (
                     <div key={order.id} className="border rounded-lg p-4">
-                      <div className="flex justify-between">
+                      <div className="flex justify-between mb-4">
                         <div>
                           <p className="font-medium">Order #{order.id.slice(0, 8)}</p>
                           <p className="text-sm text-muted-foreground">
@@ -197,8 +200,32 @@ const Account = () => {
                         </div>
                         <div className="text-right">
                           <p className="font-medium">{order.total.toFixed(2)} €</p>
-                          <p className="text-sm capitalize text-muted-foreground">{order.status}</p>
+                          <p className="text-sm capitalize text-muted-foreground">
+                            {order.status}
+                          </p>
                         </div>
+                      </div>
+                      <div className="space-y-2">
+                        {order.items.map((item: CartItem) => (
+                          <div key={`${item.id}-${item.size}`} className="flex items-center gap-4">
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="w-16 h-16 object-cover rounded"
+                            />
+                            <div>
+                              <p className="font-medium">{item.name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                Size: {item.size} | Quantity: {item.quantity}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-4 text-sm text-muted-foreground">
+                        <p><strong>Shipping Address:</strong> {order.shipping_address}</p>
+                        <p><strong>Payment Method:</strong> {order.payment_method}</p>
+                        <p><strong>Estimated Delivery:</strong> {new Date(order.estimated_delivery).toLocaleDateString()}</p>
                       </div>
                     </div>
                   ))}
