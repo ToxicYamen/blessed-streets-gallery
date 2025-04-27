@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { CartItem } from "@/lib/store/cart";
-import { Json } from "@/integrations/supabase/types";
 
 interface CreateOrderParams {
   items: CartItem[];
@@ -18,14 +17,11 @@ export const createOrder = async ({ items, total, shippingAddress, paymentMethod
   const estimatedDelivery = new Date();
   estimatedDelivery.setDate(estimatedDelivery.getDate() + 7);
 
-  // Convert CartItem[] to Json compatible format
-  const itemsJson = items as unknown as Json;
-
   const { data, error } = await supabase
     .from('orders')
     .insert({
       user_id: session.user.id,
-      items: itemsJson,
+      items,
       total,
       shipping_address: shippingAddress,
       payment_method: paymentMethod,
