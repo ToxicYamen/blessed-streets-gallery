@@ -1,11 +1,8 @@
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '@/lib/store/cart';
 import { createOrder } from '@/services/orders';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -18,50 +15,13 @@ const CheckoutPage = () => {
     expiryDate: '',
     cvv: ''
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [userAddress, setUserAddress] = useState('');
 
   const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
 
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const { data } = await supabase
-            .from('profiles')
-            .select('address')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (data?.address) {
-            setUserAddress(data.address);
-            setShippingAddress(data.address);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-      }
-    };
-    
-    fetchUserProfile();
-  }, []);
-
   const handleSubmitOrder = async () => {
     try {
-      setIsLoading(true);
       if (!shippingAddress) {
         toast.error('Please enter a shipping address');
-        setIsLoading(false);
-        return;
-      }
-
-      // Check if user is logged in
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error('Please log in to place an order');
-        navigate('/auth/login');
-        setIsLoading(false);
         return;
       }
 
@@ -82,8 +42,6 @@ const CheckoutPage = () => {
       }
     } catch (error: any) {
       toast.error(error.message);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -103,61 +61,43 @@ const CheckoutPage = () => {
           {/* Order Summary */}
           <div>
             <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-            {items.length === 0 ? (
-              <p>Your cart is empty. <Link to="/shop" className="underline">Continue shopping</Link></p>
-            ) : (
-              <>
-                {items.map((item) => (
-                  <div key={`${item.id}-${item.size}`} className="flex items-center space-x-4 mb-4">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                    <div className="flex-1">
-                      <h3 className="font-medium">{item.name}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Size: {item.size}
-                      </p>
-                      <p className="text-sm">Qty: {item.quantity}</p>
-                    </div>
-                    <p className="font-medium">{item.price.toFixed(2)} €</p>
-                  </div>
-                ))}
-
-                <div className="border-t border-gray-200 dark:border-gray-800 mt-4 pt-4">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
-                    <span>{subtotal.toFixed(2)} €</span>
-                  </div>
-                  <div className="flex justify-between mb-2">
-                    <span className="text-gray-600 dark:text-gray-400">Shipping</span>
-                    <span>Free</span>
-                  </div>
-                  <div className="flex justify-between font-semibold text-lg mt-4">
-                    <span>Total</span>
-                    <span>{subtotal.toFixed(2)} €</span>
-                  </div>
+            {items.map((item) => (
+              <div key={`${item.id}-${item.size}`} className="flex items-center space-x-4 mb-4">
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="w-16 h-16 object-cover rounded"
+                />
+                <div className="flex-1">
+                  <h3 className="font-medium">{item.name}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Size: {item.size}
+                  </p>
+                  <p className="text-sm">Qty: {item.quantity}</p>
                 </div>
-              </>
-            )}
+                <p className="font-medium">{item.price.toFixed(2)} €</p>
+              </div>
+            ))}
+
+            <div className="border-t border-gray-200 dark:border-gray-800 mt-4 pt-4">
+              <div className="flex justify-between mb-2">
+                <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
+                <span>{subtotal.toFixed(2)} €</span>
+              </div>
+              <div className="flex justify-between mb-2">
+                <span className="text-gray-600 dark:text-gray-400">Shipping</span>
+                <span>Free</span>
+              </div>
+              <div className="flex justify-between font-semibold text-lg mt-4">
+                <span>Total</span>
+                <span>{subtotal.toFixed(2)} €</span>
+              </div>
+            </div>
           </div>
 
           {/* Shipping Address */}
           <div className="mb-6">
             <h2 className="text-xl font-semibold mb-4">Shipping Address</h2>
-            {userAddress && (
-              <div className="mb-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setShippingAddress(userAddress)}
-                  className="mb-2"
-                >
-                  Use saved address
-                </Button>
-              </div>
-            )}
             <textarea
               className="w-full bg-white dark:bg-[#27272A] border border-gray-200 dark:border-0 rounded-lg px-4 py-2.5"
               rows={3}
@@ -173,7 +113,6 @@ const CheckoutPage = () => {
 
             <div className="flex w-full mb-6 space-x-4">
               <button
-                type="button"
                 onClick={() => setPaymentMethod('card')}
                 className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg ${paymentMethod === 'card'
                   ? 'border border-black dark:border-white'
@@ -188,7 +127,6 @@ const CheckoutPage = () => {
               </button>
 
               <button
-                type="button"
                 onClick={() => setPaymentMethod('paypal')}
                 className={`flex-1 flex items-center justify-center gap-2 ${paymentMethod === 'paypal'
                   ? 'opacity-100'
@@ -202,7 +140,6 @@ const CheckoutPage = () => {
               </button>
 
               <button
-                type="button"
                 onClick={() => setPaymentMethod('klarna')}
                 className={`flex-1 flex items-center justify-center gap-2 ${paymentMethod === 'klarna'
                   ? 'opacity-100'
@@ -230,9 +167,6 @@ const CheckoutPage = () => {
                     value={paymentDetails.cardNumber}
                     onChange={(e) => setPaymentDetails({ ...paymentDetails, cardNumber: e.target.value })}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    For testing, use: 4242 4242 4242 4242
-                  </p>
                 </div>
 
                 <div>
@@ -282,25 +216,20 @@ const CheckoutPage = () => {
             )}
 
             <button
-              disabled={isLoading || items.length === 0}
               onClick={handleSubmitOrder}
               className={`w-full font-medium rounded-lg py-2.5 mt-6 transition-colors ${
-                isLoading 
-                  ? 'bg-gray-400 cursor-not-allowed text-white'
-                  : paymentMethod === 'paypal'
-                    ? 'bg-[#0070BA] hover:bg-[#003087] text-white'
-                    : paymentMethod === 'klarna'
-                      ? 'bg-[#FFB3C7] hover:bg-[#FF8FAB] text-black'
-                      : 'bg-black dark:bg-white text-white dark:text-black hover:bg-gray-900 dark:hover:bg-gray-100'
+                paymentMethod === 'paypal'
+                  ? 'bg-[#0070BA] hover:bg-[#003087] text-white'
+                  : paymentMethod === 'klarna'
+                    ? 'bg-[#FFB3C7] hover:bg-[#FF8FAB] text-black'
+                    : 'bg-black dark:bg-white text-white dark:text-black hover:bg-gray-900 dark:hover:bg-gray-100'
               }`}
             >
-              {isLoading 
-                ? 'Processing...'
-                : paymentMethod === 'card'
-                  ? `Pay ${subtotal.toFixed(2)} €`
-                  : paymentMethod === 'paypal'
-                    ? 'Continue with PayPal'
-                    : 'Continue with Klarna'
+              {paymentMethod === 'card'
+                ? `Pay ${subtotal.toFixed(2)} €`
+                : paymentMethod === 'paypal'
+                  ? 'Continue with PayPal'
+                  : 'Continue with Klarna'
               }
             </button>
 

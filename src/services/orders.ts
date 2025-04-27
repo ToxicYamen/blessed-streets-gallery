@@ -19,7 +19,7 @@ export const createOrder = async ({ items, total, shippingAddress, paymentMethod
   estimatedDelivery.setDate(estimatedDelivery.getDate() + 7);
 
   // Convert CartItem[] to Json compatible format
-  const itemsJson = JSON.parse(JSON.stringify(items)) as Json;
+  const itemsJson = items as unknown as Json;
 
   const { data, error } = await supabase
     .from('orders')
@@ -37,46 +37,4 @@ export const createOrder = async ({ items, total, shippingAddress, paymentMethod
 
   if (error) throw error;
   return data;
-};
-
-export const cancelOrder = async (orderId: string) => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) throw new Error('User must be logged in');
-
-  const { data, error } = await supabase
-    .from('orders')
-    .update({ status: 'cancelled' })
-    .eq('id', orderId)
-    .eq('user_id', session.user.id)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-};
-
-export const getOrders = async () => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) throw new Error('User must be logged in');
-
-  try {
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    
-    // Safely parse items JSON
-    const parsedOrders = data.map((order) => ({
-      ...order,
-      items: Array.isArray(order.items) ? order.items : JSON.parse(JSON.stringify(order.items))
-    }));
-    
-    return parsedOrders;
-  } catch (error) {
-    console.error("Error fetching orders:", error);
-    return [];
-  }
 };
