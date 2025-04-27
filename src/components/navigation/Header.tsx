@@ -12,6 +12,7 @@ import { useCart } from '@/context/CartContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import '@/i18n/config';
+import { useTheme } from '@/components/theme/ThemeProvider';
 
 export const Header = () => {
   const { t, i18n } = useTranslation();
@@ -29,6 +30,8 @@ export const Header = () => {
   const cartIconRef = useRef<HTMLDivElement>(null);
   const languageRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { cartItems } = useCart();
+  const { theme } = useTheme();
 
   useEffect(() => {
     const getUser = async () => {
@@ -78,23 +81,6 @@ export const Header = () => {
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, []);
-
-  useEffect(() => {
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === 'class') {
-          setIsDarkMode(document.documentElement.classList.contains('dark'));
-        }
-      });
-    });
-
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
-
-    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -170,7 +156,7 @@ export const Header = () => {
       <header
         className={cn(
           "fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 py-4",
-          isDarkMode
+          theme === "dark"
             ? isScrolled
               ? "bg-mono-950/90 backdrop-blur-sm border-b border-white/10" // Dark Mode + Scroll
               : "bg-transparent" // Dark Mode ohne Scroll
