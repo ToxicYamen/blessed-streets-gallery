@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { CartItem } from '@/lib/store/cart';
 import { getOrders, cancelOrder } from '@/services/orders';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Profile {
   id: string;
@@ -33,7 +34,7 @@ interface Order {
 const Account = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [orderLoading, setOrderLoading] = useState(false);
+  const [orderLoading, setOrderLoading] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [editing, setEditing] = useState(false);
@@ -45,21 +46,31 @@ const Account = () => {
   });
 
   useEffect(() => {
-    checkUser();
-    fetchProfile();
-    fetchOrders();
-  }, []);
-
-  const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate('/auth/login');
-    }
-  };
+    const checkUserAndLoadData = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          navigate('/auth/login');
+          return;
+        }
+        
+        await Promise.all([
+          fetchProfile(),
+          fetchOrders()
+        ]);
+      } catch (error: any) {
+        console.error("Error checking user session:", error);
+        toast.error("Failed to load account data. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    checkUserAndLoadData();
+  }, [navigate]);
 
   const fetchProfile = async () => {
     try {
-      setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return;
 
@@ -70,6 +81,7 @@ const Account = () => {
         .single();
 
       if (error) throw error;
+      
       setProfile(data);
       setFormData({
         first_name: data.first_name || '',
@@ -78,9 +90,8 @@ const Account = () => {
         address: data.address || '',
       });
     } catch (error: any) {
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
+      console.error("Error fetching profile:", error);
+      toast.error("Failed to load profile data");
     }
   };
 
@@ -90,7 +101,8 @@ const Account = () => {
       const orderData = await getOrders();
       setOrders(orderData);
     } catch (error: any) {
-      toast.error(error.message);
+      console.error("Error fetching orders:", error);
+      toast.error("Failed to load order history");
     } finally {
       setOrderLoading(false);
     }
@@ -127,16 +139,52 @@ const Account = () => {
   };
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error(error.message);
-    } else {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
       navigate('/');
+      toast.success("Logged out successfully");
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return (
+      <div>
+        <PageHeader
+          title="Account"
+          description="Manage your account settings and view your orders"
+        />
+        <div className="blesssed-container py-12">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr,400px] gap-8">
+            <div className="space-y-6">
+              <div className="bg-accent/5 rounded-lg p-6">
+                <h3 className="text-lg font-semibold mb-4">Profile Information</h3>
+                <div className="space-y-4">
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-4 w-64" />
+                  <Skeleton className="h-4 w-40" />
+                </div>
+              </div>
+              <div className="bg-accent/5 rounded-lg p-6">
+                <h3 className="text-lg font-semibold mb-4">Order History</h3>
+                <div className="space-y-4">
+                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-24 w-full" />
+                </div>
+              </div>
+            </div>
+            <div className="space-y-6">
+              <div className="bg-accent/5 rounded-lg p-6">
+                <h3 className="text-lg font-semibold mb-4">Account Actions</h3>
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
