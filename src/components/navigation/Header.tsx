@@ -27,7 +27,6 @@ export const Header = () => {
   );
   const [user, setUser] = useState<any>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string>('');
   const cartIconRef = useRef<HTMLDivElement>(null);
   const languageRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -42,14 +41,11 @@ export const Header = () => {
       if (session?.user) {
         const { data } = await supabase
           .from('profiles')
-          .select('first_name, last_name, avatar_url')
+          .select('avatar_url')
           .eq('id', session.user.id)
           .single();
         
         setAvatarUrl(data?.avatar_url || null);
-        if (data?.first_name || data?.last_name) {
-          setUserName(`${data.first_name || ''} ${data.last_name || ''}`.trim());
-        }
       }
     };
     
@@ -61,19 +57,13 @@ export const Header = () => {
       if (session?.user) {
         const { data } = await supabase
           .from('profiles')
-          .select('first_name, last_name, avatar_url')
+          .select('avatar_url')
           .eq('id', session.user.id)
           .single();
         
         setAvatarUrl(data?.avatar_url || null);
-        if (data?.first_name || data?.last_name) {
-          setUserName(`${data.first_name || ''} ${data.last_name || ''}`.trim());
-        } else {
-          setUserName('');
-        }
       } else {
         setAvatarUrl(null);
-        setUserName('');
       }
     });
     
@@ -405,7 +395,7 @@ export const Header = () => {
                 className="text-white text-left"
                 onClick={() => handleNavClick(user ? '/account' : '/auth/login')}
               >
-                {user ? (userName || t('navigation.account')) : t('navigation.login')}
+                {user ? t('navigation.account') : t('navigation.login')}
               </button>
             </nav>
 
