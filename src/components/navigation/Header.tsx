@@ -9,6 +9,8 @@ import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
 import { cartIconAnimation, pageTransition } from '@/lib/transitions';
 import { useCart } from '@/context/CartContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import '@/i18n/config';
 
 export const Header = () => {
@@ -22,11 +24,50 @@ export const Header = () => {
   const [currentLanguage, setCurrentLanguage] = useState<'DE' | 'US'>(
     localStorage.getItem('i18nextLng')?.startsWith('de') ? 'DE' : 'US'
   );
+  const [user, setUser] = useState<any>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const cartIconRef = useRef<HTMLDivElement>(null);
   const languageRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { cartItems } = useCart();
-  const [isDarkMode, setIsDarkMode] = useState(document.documentElement.classList.contains('dark'));
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+      
+      if (session?.user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', session.user.id)
+          .single();
+        
+        setAvatarUrl(data?.avatar_url || null);
+      }
+    };
+    
+    getUser();
+    
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setUser(session?.user || null);
+      
+      if (session?.user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', session.user.id)
+          .single();
+        
+        setAvatarUrl(data?.avatar_url || null);
+      } else {
+        setAvatarUrl(null);
+      }
+    });
+    
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -112,6 +153,18 @@ export const Header = () => {
     });
   };
 
+  const handleUserClick = () => {
+    if (user) {
+      pageTransition(() => {
+        navigate('/account');
+      });
+    } else {
+      pageTransition(() => {
+        navigate('/auth/login');
+      });
+    }
+  };
+
   return (
     <>
       <header
@@ -139,7 +192,6 @@ export const Header = () => {
           <div className="flex items-center space-x-4">
             <ThemeToggle />
 
-            {/* Language Selector - Desktop only */}
             <div className="relative hidden lg:block" ref={languageRef}>
               <Button
                 variant="ghost"
@@ -216,7 +268,6 @@ export const Header = () => {
               )}
             </div>
 
-            {/* Search Bar */}
             <div className="hidden md:block relative">
               <form onSubmit={handleSearch} className="flex items-center">
                 <div className="flex items-center w-64">
@@ -239,7 +290,6 @@ export const Header = () => {
               </form>
             </div>
 
-            {/* Wishlist Button */}
             <Button
               variant="ghost"
               size="icon"
@@ -256,7 +306,6 @@ export const Header = () => {
               )} />
             </Button>
 
-            {/* Cart Icon */}
             <div
               ref={cartIconRef}
               className="relative cursor-pointer cart-icon rounded-md p-2"
@@ -271,19 +320,28 @@ export const Header = () => {
               )}
             </div>
 
-            {/* User Button */}
-            <Link to="/auth/login" className="hidden md:block" data-navigation="true">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white"
-                data-navigation="true"
-              >
-                <User className="h-4 w-4" />
-              </Button>
-            </Link>
+            <button
+              onClick={handleUserClick}
+              className="hidden md:block"
+            >
+              {user && avatarUrl ? (
+                <Avatar className="w-8 h-8 border border-white/20">
+                  <AvatarImage src={avatarUrl} alt="User" />
+                  <AvatarFallback className="text-xs text-white bg-primary/80">
+                    {user.email?.substring(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white"
+                >
+                  <User className="h-4 w-4" />
+                </Button>
+              )}
+            </button>
 
-            {/* Mobile Menu Button */}
             <button
               className="p-1 lg:hidden md:hidden"
               onClick={toggleMenu}
@@ -295,7 +353,6 @@ export const Header = () => {
         </div>
       </header>
 
-      {/* Mobile Menu Overlay */}
       {isMenuOpen && (
         <div className="fixed inset-0 bg-black z-50 lg:hidden md:hidden">
           <div className="blesssed-container h-full flex flex-col">
@@ -350,9 +407,9 @@ export const Header = () => {
               </button>
               <button
                 className="text-white text-left"
-                onClick={() => handleNavClick('/auth/login')}
+                onClick={() => handleNavClick(user ? '/account' : '/auth/login')}
               >
-                {t('navigation.login')}
+                {user ? t('navigation.account') : t('navigation.login')}
               </button>
             </nav>
 

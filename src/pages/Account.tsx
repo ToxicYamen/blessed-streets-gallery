@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { CartItem } from '@/lib/store/cart';
 
 interface Profile {
   id: string;
@@ -13,6 +14,7 @@ interface Profile {
   last_name: string | null;
   phone: string | null;
   address: string | null;
+  avatar_url: string | null;
 }
 
 interface Order {
@@ -90,7 +92,13 @@ const Account = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setOrders(data || []);
+      
+      const parsedOrders = data.map((order: any) => ({
+        ...order,
+        items: Array.isArray(order.items) ? order.items : JSON.parse(order.items)
+      }));
+      
+      setOrders(parsedOrders);
     } catch (error: any) {
       toast.error(error.message);
     }
