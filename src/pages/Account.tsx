@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { CartItem } from '@/lib/store/cart';
+import { getOrders, cancelOrder } from '@/services/orders';
 
 interface Profile {
   id: string;
@@ -31,6 +33,7 @@ interface Order {
 const Account = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [orderLoading, setOrderLoading] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [editing, setEditing] = useState(false);
@@ -56,6 +59,7 @@ const Account = () => {
 
   const fetchProfile = async () => {
     try {
+      setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return;
 
@@ -82,25 +86,13 @@ const Account = () => {
 
   const fetchOrders = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return;
-
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      const parsedOrders = data.map((order: any) => ({
-        ...order,
-        items: Array.isArray(order.items) ? order.items : JSON.parse(order.items)
-      }));
-      
-      setOrders(parsedOrders);
+      setOrderLoading(true);
+      const orderData = await getOrders();
+      setOrders(orderData);
     } catch (error: any) {
       toast.error(error.message);
+    } finally {
+      setOrderLoading(false);
     }
   };
 
@@ -119,6 +111,16 @@ const Account = () => {
       toast.success('Profile updated successfully');
       setEditing(false);
       fetchProfile();
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleCancelOrder = async (orderId: string) => {
+    try {
+      await cancelOrder(orderId);
+      toast.success('Order cancelled successfully');
+      fetchOrders();
     } catch (error: any) {
       toast.error(error.message);
     }
@@ -193,7 +195,9 @@ const Account = () => {
             {/* Orders Section */}
             <div className="bg-accent/5 rounded-lg p-6">
               <h3 className="text-lg font-semibold mb-4">Order History</h3>
-              {orders.length === 0 ? (
+              {orderLoading ? (
+                <p>Loading orders...</p>
+              ) : orders.length === 0 ? (
                 <p>No orders yet</p>
               ) : (
                 <div className="space-y-4">
@@ -208,14 +212,14 @@ const Account = () => {
                         </div>
                         <div className="text-right">
                           <p className="font-medium">{order.total.toFixed(2)} €</p>
-                          <p className="text-sm capitalize text-muted-foreground">
+                          <p className={`text-sm capitalize ${order.status === 'cancelled' ? 'text-red-500' : 'text-muted-foreground'}`}>
                             {order.status}
                           </p>
                         </div>
                       </div>
                       <div className="space-y-2">
-                        {order.items.map((item: CartItem) => (
-                          <div key={`${item.id}-${item.size}`} className="flex items-center gap-4">
+                        {order.items.map((item: CartItem, index: number) => (
+                          <div key={`${item.id}-${item.size}-${index}`} className="flex items-center gap-4">
                             <img
                               src={item.image}
                               alt={item.name}
@@ -235,6 +239,17 @@ const Account = () => {
                         <p><strong>Payment Method:</strong> {order.payment_method}</p>
                         <p><strong>Estimated Delivery:</strong> {new Date(order.estimated_delivery).toLocaleDateString()}</p>
                       </div>
+                      {order.status !== 'cancelled' && (
+                        <div className="mt-4">
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => handleCancelOrder(order.id)}
+                          >
+                            Cancel Order
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
