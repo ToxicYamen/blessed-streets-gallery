@@ -1,14 +1,14 @@
 
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { CartItem } from '@/lib/store/cart';
-import { cancelOrder } from '@/services/orders';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/hooks/useAuth';
+import { ProfileSection } from '@/components/account/ProfileSection';
+import { OrdersList } from '@/components/account/OrdersList';
+import { AccountSidebar } from '@/components/account/AccountSidebar';
+import { Loader } from 'lucide-react';
 
 interface Profile {
   id: string;
@@ -32,46 +32,18 @@ interface Order {
 }
 
 const Account = () => {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const { isLoading: authLoading, isAuthenticated } = useAuth();
   const [profileLoading, setProfileLoading] = useState(true);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [editing, setEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    phone: '',
-    address: '',
-  });
-  const [cancelingOrderId, setCancelingOrderId] = useState<string | null>(null);
 
   useEffect(() => {
-    checkUser();
-  }, []);
-
-  useEffect(() => {
-    if (!loading) {
+    if (!authLoading && isAuthenticated) {
       fetchProfile();
       fetchOrders();
     }
-  }, [loading]);
-
-  const checkUser = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/auth/login');
-        return;
-      }
-      setLoading(false);
-    } catch (error) {
-      console.error('Error checking user session:', error);
-      toast.error('Error checking authentication status. Please try again.');
-      setLoading(false);
-    }
-  };
+  }, [authLoading, isAuthenticated]);
 
   const fetchProfile = async () => {
     try {
@@ -86,7 +58,7 @@ const Account = () => {
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching profile:', error);
@@ -94,15 +66,8 @@ const Account = () => {
       }
       
       setProfile(data);
-      setFormData({
-        first_name: data.first_name || '',
-        last_name: data.last_name || '',
-        phone: data.phone || '',
-        address: data.address || '',
-      });
     } catch (error: any) {
       toast.error(`Error loading profile: ${error.message}`);
-      // Even on error, we should resolve the loading state
     } finally {
       setProfileLoading(false);
     }
@@ -137,72 +102,19 @@ const Account = () => {
       setOrders(parsedOrders);
     } catch (error: any) {
       toast.error(`Error loading orders: ${error.message}`);
-      // Even on error, we should resolve the loading state
     } finally {
       setOrdersLoading(false);
     }
   };
 
-  const handleUpdateProfile = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return;
-
-      const { error } = await supabase
-        .from('profiles')
-        .update(formData)
-        .eq('id', session.user.id);
-
-      if (error) throw error;
-      
-      toast.success('Profile updated successfully');
-      setEditing(false);
-      fetchProfile();
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-  };
-
-  const handleCancelOrder = async (orderId: string) => {
-    try {
-      setCancelingOrderId(orderId);
-      
-      await cancelOrder(orderId);
-      
-      toast.success('Order cancelled successfully');
-      
-      // Update the orders list
-      setOrders(orders.map(order => 
-        order.id === orderId 
-          ? { ...order, status: 'cancelled' } 
-          : order
-      ));
-    } catch (error: any) {
-      toast.error(`Failed to cancel order: ${error.message}`);
-    } finally {
-      setCancelingOrderId(null);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        throw error;
-      } else {
-        navigate('/');
-      }
-    } catch (error: any) {
-      toast.error(`Logout failed: ${error.message}`);
-    }
-  };
-
-  // Show a different loading state for the initial authentication check
-  if (loading) {
+  // Show loading state for initial authentication check
+  if (authLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
-        <span className="ml-3">Checking authentication...</span>
+        <div className="flex flex-col items-center gap-2">
+          <Loader className="h-8 w-8 animate-spin text-primary" />
+          <span>Checking authentication...</span>
+        </div>
       </div>
     );
   }
@@ -216,148 +128,24 @@ const Account = () => {
       
       <div className="container py-12">
         <div className="grid grid-cols-1 md:grid-cols-[1fr,400px] gap-8">
-          {/* Profile Section */}
+          {/* Main Content */}
           <div className="space-y-6">
-            <div className="bg-accent/5 rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">Profile Information</h3>
-              
-              {profileLoading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-12 w-full" />
-                </div>
-              ) : editing ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input
-                      placeholder="First Name"
-                      value={formData.first_name}
-                      onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Last Name"
-                      value={formData.last_name}
-                      onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                    />
-                  </div>
-                  <Input
-                    placeholder="Phone"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  />
-                  <Input
-                    placeholder="Address"
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  />
-                  <div className="flex gap-2">
-                    <Button onClick={handleUpdateProfile}>Save Changes</Button>
-                    <Button variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <p><strong>Email:</strong> {profile?.email}</p>
-                  <p><strong>Name:</strong> {profile?.first_name} {profile?.last_name}</p>
-                  <p><strong>Phone:</strong> {profile?.phone || 'Not set'}</p>
-                  <p><strong>Address:</strong> {profile?.address || 'Not set'}</p>
-                  <Button onClick={() => setEditing(true)}>Edit Profile</Button>
-                </div>
-              )}
-            </div>
+            <ProfileSection 
+              profile={profile} 
+              isLoading={profileLoading} 
+              onProfileUpdated={fetchProfile} 
+            />
 
-            {/* Orders Section */}
-            <div className="bg-accent/5 rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">Order History</h3>
-              
-              {ordersLoading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-40 w-full" />
-                  <Skeleton className="h-40 w-full" />
-                </div>
-              ) : orders.length === 0 ? (
-                <p>No orders yet</p>
-              ) : (
-                <div className="space-y-4">
-                  {orders.map((order) => (
-                    <div key={order.id} className="border rounded-lg p-4">
-                      <div className="flex justify-between mb-4">
-                        <div>
-                          <p className="font-medium">Order #{order.id.slice(0, 8)}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(order.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium">{order.total.toFixed(2)} €</p>
-                          <p className={`text-sm capitalize ${
-                            order.status === 'cancelled' 
-                              ? 'text-red-500' 
-                              : order.status === 'confirmed' 
-                              ? 'text-green-500' 
-                              : 'text-muted-foreground'
-                          }`}>
-                            {order.status}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        {(order.items || []).map((item: CartItem, index: number) => (
-                          <div key={`${item.id}-${item.size}-${index}`} className="flex items-center gap-4">
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              className="w-16 h-16 object-cover rounded"
-                            />
-                            <div>
-                              <p className="font-medium">{item.name}</p>
-                              <p className="text-sm text-muted-foreground">
-                                Size: {item.size} | Quantity: {item.quantity}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-4 text-sm text-muted-foreground">
-                        <p><strong>Shipping Address:</strong> {order.shipping_address}</p>
-                        <p><strong>Payment Method:</strong> {order.payment_method}</p>
-                        <p><strong>Estimated Delivery:</strong> {new Date(order.estimated_delivery).toLocaleDateString()}</p>
-                      </div>
-                      
-                      {order.status === 'confirmed' && (
-                        <div className="mt-4">
-                          <Button 
-                            variant="destructive" 
-                            size="sm" 
-                            onClick={() => handleCancelOrder(order.id)}
-                            disabled={cancelingOrderId === order.id}
-                          >
-                            {cancelingOrderId === order.id ? 'Cancelling...' : 'Cancel Order'}
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <OrdersList 
+              orders={orders} 
+              isLoading={ordersLoading} 
+              onOrderUpdated={fetchOrders} 
+            />
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
-            <div className="bg-accent/5 rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">Account Actions</h3>
-              <div className="space-y-2">
-                <Button
-                  variant="destructive"
-                  className="w-full"
-                  onClick={handleLogout}
-                >
-                  Sign Out
-                </Button>
-              </div>
-            </div>
+          <div>
+            <AccountSidebar />
           </div>
         </div>
       </div>
