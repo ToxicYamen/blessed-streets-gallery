@@ -8,7 +8,6 @@ import { toast } from 'sonner';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { CartItem } from '@/lib/store/cart';
 import { cancelOrder } from '@/services/orders';
-import { Skeleton } from '@/components/ui/skeleton';
 
 interface Profile {
   id: string;
@@ -34,8 +33,6 @@ interface Order {
 const Account = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [profileLoading, setProfileLoading] = useState(true);
-  const [ordersLoading, setOrdersLoading] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [editing, setEditing] = useState(false);
@@ -49,36 +46,26 @@ const Account = () => {
 
   useEffect(() => {
     checkUser();
+    fetchProfile();
+    fetchOrders();
   }, []);
-
-  useEffect(() => {
-    if (!loading) {
-      fetchProfile();
-      fetchOrders();
-    }
-  }, [loading]);
 
   const checkUser = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate('/auth/login');
-        return;
       }
-      setLoading(false);
     } catch (error) {
       console.error('Error checking user session:', error);
-      toast.error('Error checking authentication status. Please try again.');
-      setLoading(false);
     }
   };
 
   const fetchProfile = async () => {
     try {
-      setProfileLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
-        setProfileLoading(false);
+        setLoading(false);
         return;
       }
 
@@ -88,11 +75,7 @@ const Account = () => {
         .eq('id', session.user.id)
         .single();
 
-      if (error) {
-        console.error('Error fetching profile:', error);
-        throw error;
-      }
-      
+      if (error) throw error;
       setProfile(data);
       setFormData({
         first_name: data.first_name || '',
@@ -102,18 +85,16 @@ const Account = () => {
       });
     } catch (error: any) {
       toast.error(`Error loading profile: ${error.message}`);
-      // Even on error, we should resolve the loading state
     } finally {
-      setProfileLoading(false);
+      setLoading(false);
     }
   };
 
   const fetchOrders = async () => {
     try {
-      setOrdersLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
-        setOrdersLoading(false);
+        setLoading(false);
         return;
       }
 
@@ -123,10 +104,7 @@ const Account = () => {
         .eq('user_id', session.user.id)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching orders:', error);
-        throw error;
-      }
+      if (error) throw error;
       
       // Ensure items are properly parsed
       const parsedOrders = data.map((order: any) => ({
@@ -137,9 +115,6 @@ const Account = () => {
       setOrders(parsedOrders);
     } catch (error: any) {
       toast.error(`Error loading orders: ${error.message}`);
-      // Even on error, we should resolve the loading state
-    } finally {
-      setOrdersLoading(false);
     }
   };
 
@@ -185,24 +160,19 @@ const Account = () => {
   };
 
   const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        throw error;
-      } else {
-        navigate('/');
-      }
-    } catch (error: any) {
-      toast.error(`Logout failed: ${error.message}`);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error(error.message);
+    } else {
+      navigate('/');
     }
   };
 
-  // Show a different loading state for the initial authentication check
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
-        <span className="ml-3">Checking authentication...</span>
+        <span className="ml-3">Loading...</span>
       </div>
     );
   }
@@ -214,20 +184,13 @@ const Account = () => {
         description="Manage your account settings and view your orders"
       />
       
-      <div className="container py-12">
+      <div className="blesssed-container py-12">
         <div className="grid grid-cols-1 md:grid-cols-[1fr,400px] gap-8">
           {/* Profile Section */}
           <div className="space-y-6">
             <div className="bg-accent/5 rounded-lg p-6">
               <h3 className="text-lg font-semibold mb-4">Profile Information</h3>
-              
-              {profileLoading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-12 w-full" />
-                </div>
-              ) : editing ? (
+              {editing ? (
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <Input
@@ -270,13 +233,7 @@ const Account = () => {
             {/* Orders Section */}
             <div className="bg-accent/5 rounded-lg p-6">
               <h3 className="text-lg font-semibold mb-4">Order History</h3>
-              
-              {ordersLoading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-40 w-full" />
-                  <Skeleton className="h-40 w-full" />
-                </div>
-              ) : orders.length === 0 ? (
+              {orders.length === 0 ? (
                 <p>No orders yet</p>
               ) : (
                 <div className="space-y-4">
@@ -303,8 +260,8 @@ const Account = () => {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        {(order.items || []).map((item: CartItem, index: number) => (
-                          <div key={`${item.id}-${item.size}-${index}`} className="flex items-center gap-4">
+                        {(order.items || []).map((item: CartItem) => (
+                          <div key={`${item.id}-${item.size}`} className="flex items-center gap-4">
                             <img
                               src={item.image}
                               alt={item.name}
