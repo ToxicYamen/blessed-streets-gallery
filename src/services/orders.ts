@@ -38,3 +38,19 @@ export const createOrder = async ({ items, total, shippingAddress, paymentMethod
   if (error) throw error;
   return data;
 };
+
+export const cancelOrder = async (orderId: string) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) throw new Error('User must be logged in');
+  
+  const { data, error } = await supabase
+    .from('orders')
+    .update({ status: 'cancelled' })
+    .eq('id', orderId)
+    .eq('user_id', session.user.id)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};

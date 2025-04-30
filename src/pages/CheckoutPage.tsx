@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '@/lib/store/cart';
 import { createOrder } from '@/services/orders';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -15,6 +16,27 @@ const CheckoutPage = () => {
     expiryDate: '',
     cvv: ''
   });
+  const [loading, setLoading] = useState(false);
+  
+  // Load saved address if user is logged in
+  useEffect(() => {
+    const loadUserAddress = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('address')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (profile?.address) {
+          setShippingAddress(profile.address);
+        }
+      }
+    };
+    
+    loadUserAddress();
+  }, []);
 
   const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
 
@@ -25,9 +47,19 @@ const CheckoutPage = () => {
         return;
       }
 
+      setLoading(true);
+      
+      // Check if user is logged in
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('You must be logged in to place an order');
+        navigate('/auth/login');
+        return;
+      }
+
       // Simulate payment processing
       if (paymentMethod === 'card' && paymentDetails.cardNumber === '4242424242424242') {
-        await createOrder({
+        const order = await createOrder({
           items,
           total: subtotal,
           shippingAddress,
@@ -42,6 +74,8 @@ const CheckoutPage = () => {
       }
     } catch (error: any) {
       toast.error(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -217,7 +251,10 @@ const CheckoutPage = () => {
 
             <button
               onClick={handleSubmitOrder}
+              disabled={loading}
               className={`w-full font-medium rounded-lg py-2.5 mt-6 transition-colors ${
+                loading ? 'opacity-70 cursor-not-allowed' : ''
+              } ${
                 paymentMethod === 'paypal'
                   ? 'bg-[#0070BA] hover:bg-[#003087] text-white'
                   : paymentMethod === 'klarna'
@@ -225,11 +262,12 @@ const CheckoutPage = () => {
                     : 'bg-black dark:bg-white text-white dark:text-black hover:bg-gray-900 dark:hover:bg-gray-100'
               }`}
             >
-              {paymentMethod === 'card'
-                ? `Pay ${subtotal.toFixed(2)} €`
-                : paymentMethod === 'paypal'
-                  ? 'Continue with PayPal'
-                  : 'Continue with Klarna'
+              {loading ? 'Processing...' : 
+                paymentMethod === 'card'
+                  ? `Pay ${subtotal.toFixed(2)} €`
+                  : paymentMethod === 'paypal'
+                    ? 'Continue with PayPal'
+                    : 'Continue with Klarna'
               }
             </button>
 

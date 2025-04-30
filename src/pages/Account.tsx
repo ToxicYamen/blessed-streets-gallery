@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { CartItem } from '@/lib/store/cart';
+import { cancelOrder } from '@/services/orders';
 
 interface Profile {
   id: string;
@@ -40,6 +42,7 @@ const Account = () => {
     phone: '',
     address: '',
   });
+  const [cancelingOrderId, setCancelingOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     checkUser();
@@ -48,16 +51,23 @@ const Account = () => {
   }, []);
 
   const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate('/auth/login');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/auth/login');
+      }
+    } catch (error) {
+      console.error('Error checking user session:', error);
     }
   };
 
   const fetchProfile = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return;
+      if (!session?.user) {
+        setLoading(false);
+        return;
+      }
 
       const { data, error } = await supabase
         .from('profiles')
@@ -74,7 +84,7 @@ const Account = () => {
         address: data.address || '',
       });
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(`Error loading profile: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -83,7 +93,10 @@ const Account = () => {
   const fetchOrders = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return;
+      if (!session?.user) {
+        setLoading(false);
+        return;
+      }
 
       const { data, error } = await supabase
         .from('orders')
@@ -93,14 +106,15 @@ const Account = () => {
 
       if (error) throw error;
       
+      // Ensure items are properly parsed
       const parsedOrders = data.map((order: any) => ({
         ...order,
-        items: Array.isArray(order.items) ? order.items : JSON.parse(order.items)
+        items: Array.isArray(order.items) ? order.items : []
       }));
       
       setOrders(parsedOrders);
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(`Error loading orders: ${error.message}`);
     }
   };
 
@@ -124,6 +138,27 @@ const Account = () => {
     }
   };
 
+  const handleCancelOrder = async (orderId: string) => {
+    try {
+      setCancelingOrderId(orderId);
+      
+      await cancelOrder(orderId);
+      
+      toast.success('Order cancelled successfully');
+      
+      // Update the orders list
+      setOrders(orders.map(order => 
+        order.id === orderId 
+          ? { ...order, status: 'cancelled' } 
+          : order
+      ));
+    } catch (error: any) {
+      toast.error(`Failed to cancel order: ${error.message}`);
+    } finally {
+      setCancelingOrderId(null);
+    }
+  };
+
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -134,7 +169,12 @@ const Account = () => {
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
+        <span className="ml-3">Loading...</span>
+      </div>
+    );
   }
 
   return (
@@ -208,13 +248,19 @@ const Account = () => {
                         </div>
                         <div className="text-right">
                           <p className="font-medium">{order.total.toFixed(2)} €</p>
-                          <p className="text-sm capitalize text-muted-foreground">
+                          <p className={`text-sm capitalize ${
+                            order.status === 'cancelled' 
+                              ? 'text-red-500' 
+                              : order.status === 'confirmed' 
+                              ? 'text-green-500' 
+                              : 'text-muted-foreground'
+                          }`}>
                             {order.status}
                           </p>
                         </div>
                       </div>
                       <div className="space-y-2">
-                        {order.items.map((item: CartItem) => (
+                        {(order.items || []).map((item: CartItem) => (
                           <div key={`${item.id}-${item.size}`} className="flex items-center gap-4">
                             <img
                               src={item.image}
@@ -235,6 +281,19 @@ const Account = () => {
                         <p><strong>Payment Method:</strong> {order.payment_method}</p>
                         <p><strong>Estimated Delivery:</strong> {new Date(order.estimated_delivery).toLocaleDateString()}</p>
                       </div>
+                      
+                      {order.status === 'confirmed' && (
+                        <div className="mt-4">
+                          <Button 
+                            variant="destructive" 
+                            size="sm" 
+                            onClick={() => handleCancelOrder(order.id)}
+                            disabled={cancelingOrderId === order.id}
+                          >
+                            {cancelingOrderId === order.id ? 'Cancelling...' : 'Cancel Order'}
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
