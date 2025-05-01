@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { User } from '@supabase/supabase-js';
 
 export interface AuthUser {
   id: string;
@@ -20,7 +21,17 @@ export const useAuth = (requireAuth = true) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
-        setUser(session?.user ?? null);
+        
+        // Map Supabase User to AuthUser with required fields
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '' // Provide default value for potentially undefined email
+          });
+        } else {
+          setUser(null);
+        }
+        
         setLoading(false);
       }
     );
@@ -28,7 +39,16 @@ export const useAuth = (requireAuth = true) => {
     // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setUser(session?.user ?? null);
+      
+      // Map Supabase User to AuthUser with required fields
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email || '' // Provide default value for potentially undefined email
+        });
+      } else {
+        setUser(null);
+      }
       
       if (!session && requireAuth) {
         navigate('/auth/login');
