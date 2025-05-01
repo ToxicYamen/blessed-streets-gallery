@@ -25,42 +25,59 @@ const Account = () => {
   const [profileLoading, setProfileLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
+    const fetchProfile = async () => {
+      // Only fetch if we have a user and we're mounted
+      if (!user?.id || !isMounted) return;
+      
+      try {
+        setProfileLoading(true);
+        console.log('Fetching profile for user:', user.id);
+        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+        
+        if (isMounted) {
+          console.log('Profile data received:', data);
+          setProfile(data);
+        }
+      } catch (error: any) {
+        console.error('Error loading profile:', error);
+        if (isMounted) {
+          toast.error(`Error loading profile: ${error.message}`);
+        }
+      } finally {
+        if (isMounted) {
+          setProfileLoading(false);
+        }
+      }
+    };
+
+    // Only try to fetch profile when auth is done loading and we have a user
     if (!authLoading && user) {
       fetchProfile();
-    }
-  }, [authLoading, user]);
-
-  const fetchProfile = async () => {
-    try {
-      setProfileLoading(true);
-      
-      if (!user) {
-        setProfileLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (error) throw error;
-      setProfile(data);
-    } catch (error: any) {
-      toast.error(`Error loading profile: ${error.message}`);
-      console.error('Error loading profile:', error);
-    } finally {
+    } else if (!authLoading) {
+      // Auth is done loading but no user
       setProfileLoading(false);
     }
-  };
+
+    return () => {
+      isMounted = false;
+    };
+  }, [authLoading, user]);
 
   // Show loading state while checking authentication
   if (authLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
-        <span className="ml-3">Loading...</span>
+        <span className="ml-3">Loading authentication...</span>
       </div>
     );
   }
@@ -79,9 +96,27 @@ const Account = () => {
             <ProfileSection 
               profile={profile} 
               loading={profileLoading} 
-              onProfileUpdated={fetchProfile} 
+              onProfileUpdated={() => {
+                console.log("Profile updated, refetching...");
+                setProfileLoading(true);
+                supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('id', user?.id)
+                  .single()
+                  .then(({ data, error }) => {
+                    if (error) {
+                      console.error('Error refetching profile:', error);
+                      toast.error(`Error refetching profile: ${error.message}`);
+                    } else {
+                      console.log('Updated profile data:', data);
+                      setProfile(data);
+                    }
+                    setProfileLoading(false);
+                  });
+              }} 
             />
-            <OrdersList userId={user?.id} />
+            {user && <OrdersList userId={user.id} />}
           </div>
 
           {/* Sidebar */}

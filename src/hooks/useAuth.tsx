@@ -17,69 +17,89 @@ export const useAuth = (requireAuth = true) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // First check for existing session
+    let mounted = true;
+    
+    // Define session fetch function
     const fetchSession = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
+        
         if (error) {
           console.error('Error fetching session:', error);
-          setLoading(false);
-          if (requireAuth) {
-            navigate('/auth/login');
+          if (mounted) {
+            if (requireAuth) {
+              navigate('/auth/login');
+            }
+            setLoading(false);
           }
           return;
         }
         
+        // We have a session
         if (data.session) {
-          setSession(data.session);
-          
-          // Map Supabase User to AuthUser with required fields
-          if (data.session.user) {
-            setUser({
-              id: data.session.user.id,
-              email: data.session.user.email || '' // Provide default value for potentially undefined email
-            });
+          if (mounted) {
+            setSession(data.session);
+            
+            // Map Supabase User to AuthUser with required fields
+            if (data.session.user) {
+              setUser({
+                id: data.session.user.id,
+                email: data.session.user.email || ''
+              });
+            }
           }
-        } else if (requireAuth) {
+        } else if (requireAuth && mounted) {
+          // No session but auth is required
           navigate('/auth/login');
         }
       } catch (error) {
         console.error('Unexpected error fetching session:', error);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        setSession(session);
-        
-        // Map Supabase User to AuthUser with required fields
-        if (session?.user) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email || '' // Provide default value for potentially undefined email
-          });
-        } else {
-          setUser(null);
+        if (mounted) {
+          setSession(session);
+          
+          // Map Supabase User to AuthUser with required fields
+          if (session?.user) {
+            setUser({
+              id: session.user.id,
+              email: session.user.email || ''
+            });
+          } else {
+            setUser(null);
+          }
         }
       }
     );
 
+    // Fetch session immediately
     fetchSession();
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, [navigate, requireAuth]);
 
   const logout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error(error.message);
-    } else {
-      navigate('/');
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success('Logged out successfully');
+        navigate('/');
+      }
+    } catch (error: any) {
+      toast.error(`Error during logout: ${error.message}`);
     }
   };
 
