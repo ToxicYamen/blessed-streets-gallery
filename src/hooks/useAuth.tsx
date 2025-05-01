@@ -17,7 +17,40 @@ export const useAuth = (requireAuth = true) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener first
+    // First check for existing session
+    const fetchSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error fetching session:', error);
+          setLoading(false);
+          if (requireAuth) {
+            navigate('/auth/login');
+          }
+          return;
+        }
+        
+        if (data.session) {
+          setSession(data.session);
+          
+          // Map Supabase User to AuthUser with required fields
+          if (data.session.user) {
+            setUser({
+              id: data.session.user.id,
+              email: data.session.user.email || '' // Provide default value for potentially undefined email
+            });
+          }
+        } else if (requireAuth) {
+          navigate('/auth/login');
+        }
+      } catch (error) {
+        console.error('Unexpected error fetching session:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
@@ -31,31 +64,10 @@ export const useAuth = (requireAuth = true) => {
         } else {
           setUser(null);
         }
-        
-        setLoading(false);
       }
     );
 
-    // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      
-      // Map Supabase User to AuthUser with required fields
-      if (session?.user) {
-        setUser({
-          id: session.user.id,
-          email: session.user.email || '' // Provide default value for potentially undefined email
-        });
-      } else {
-        setUser(null);
-      }
-      
-      if (!session && requireAuth) {
-        navigate('/auth/login');
-      }
-      
-      setLoading(false);
-    });
+    fetchSession();
 
     return () => {
       subscription.unsubscribe();
