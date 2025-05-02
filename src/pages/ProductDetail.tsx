@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,12 +32,14 @@ import { toast } from 'sonner';
 import { useCart } from '@/context/CartContext';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
+import { Json } from '@/integrations/supabase/types';
 
 interface ProductInventory {
   size: string;
   quantity: number;
 }
 
+// Updated Product interface to match what we're getting from Supabase
 interface Product {
   id: string;
   name: string;
@@ -81,7 +82,18 @@ const ProductDetail = () => {
 
         if (error) throw error;
         
-        setProduct(productData);
+        // Convert the JSON data from Supabase to our Product type
+        const processedProduct: Product = {
+          ...productData,
+          // Ensure size_quantities is a Record<string, number>
+          size_quantities: productData.size_quantities ? 
+            (typeof productData.size_quantities === 'string' 
+              ? JSON.parse(productData.size_quantities) 
+              : productData.size_quantities as Record<string, number>)
+            : null
+        };
+        
+        setProduct(processedProduct);
         
         // Fetch related products (products with same color but different id)
         const { data: relatedData, error: relatedError } = await supabase
@@ -91,7 +103,16 @@ const ProductDetail = () => {
           .limit(4);
 
         if (!relatedError && relatedData) {
-          setRelatedProducts(relatedData);
+          // Process related products the same way
+          const processedRelated = relatedData.map(item => ({
+            ...item,
+            size_quantities: item.size_quantities ? 
+              (typeof item.size_quantities === 'string' 
+                ? JSON.parse(item.size_quantities) 
+                : item.size_quantities as Record<string, number>)
+              : null
+          }));
+          setRelatedProducts(processedRelated);
         }
       } catch (error: any) {
         console.error('Error fetching product:', error);

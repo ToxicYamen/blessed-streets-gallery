@@ -1,4 +1,3 @@
-
 import { createStore } from 'zustand/vanilla';
 import { useStore } from 'zustand';
 import { persist } from 'zustand/middleware';
@@ -10,7 +9,7 @@ export interface CartItem {
     quantity: number;
     image: string;
     size: string;
-    color?: string; // Added color property
+    color?: string; // Ensuring color property is defined
 }
 
 interface CartState {
@@ -133,4 +132,4 @@ const store = createStore<CartStore>()(
     )
 );
 
-export const useCartStore = () => useStore(store); 
+export const useCartStore = () => useStore(store);

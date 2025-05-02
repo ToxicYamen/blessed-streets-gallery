@@ -1,6 +1,19 @@
 
-import { Product } from '@/data/products';
 import ProductCard from './ProductCard';
+
+// Updated Product interface to match what we're getting from Supabase
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  description: string | null;
+  color: string | null;
+  images: string[] | null;
+  size: string[] | null;
+  size_quantities: Record<string, number> | null;
+  is_featured: boolean | null;
+  is_new: boolean | null;
+}
 
 interface ProductGridProps {
   products: Product[];
