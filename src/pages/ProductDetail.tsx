@@ -33,13 +33,14 @@ import { useCart } from '@/context/CartContext';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
 import { Json } from '@/integrations/supabase/types';
+import { getProductById as getLocalProductById } from '@/data/products';
 
 interface ProductInventory {
   size: string;
   quantity: number;
 }
 
-// Updated Product interface to match what we're getting from Supabase
+// Updated Product interface to match what we're getting from both data sources
 interface Product {
   id: string;
   name: string;
@@ -47,10 +48,16 @@ interface Product {
   description: string | null;
   color: string | null;
   images: string[] | null;
-  size: string[] | null;
-  size_quantities: Record<string, number> | null;
-  is_featured: boolean | null;
-  is_new: boolean | null;
+  size?: string[] | null;
+  sizes?: string[]; // From data/products.ts
+  size_quantities?: Record<string, number> | null;
+  is_featured?: boolean | null;
+  is_new?: boolean | null;
+  featured?: boolean; // From data/products.ts
+  isNew?: boolean; // From data/products.ts
+  isSale?: boolean;
+  salePrice?: number;
+  inventory?: ProductInventory[];
 }
 
 const ProductDetail = () => {
@@ -74,45 +81,93 @@ const ProductDetail = () => {
       
       try {
         setLoading(true);
+        
+        // First try to get from Supabase
         const { data: productData, error } = await supabase
           .from('products')
           .select('*')
           .eq('id', id)
           .single();
-
-        if (error) throw error;
         
-        // Convert the JSON data from Supabase to our Product type
-        const processedProduct: Product = {
-          ...productData,
-          // Ensure size_quantities is a Record<string, number>
-          size_quantities: productData.size_quantities ? 
-            (typeof productData.size_quantities === 'string' 
-              ? JSON.parse(productData.size_quantities) 
-              : productData.size_quantities as Record<string, number>)
-            : null
-        };
-        
-        setProduct(processedProduct);
-        
-        // Fetch related products (products with same color but different id)
-        const { data: relatedData, error: relatedError } = await supabase
-          .from('products')
-          .select('*')
-          .neq('id', id)
-          .limit(4);
-
-        if (!relatedError && relatedData) {
-          // Process related products the same way
-          const processedRelated = relatedData.map(item => ({
-            ...item,
-            size_quantities: item.size_quantities ? 
-              (typeof item.size_quantities === 'string' 
-                ? JSON.parse(item.size_quantities) 
-                : item.size_quantities as Record<string, number>)
+        // If not found in Supabase or there was an error, try local data
+        if (error || !productData) {
+          console.log('Product not found in Supabase, trying local data');
+          const localProduct = getLocalProductById(id);
+          
+          if (localProduct) {
+            // Map local product to match our expected format
+            const mappedLocalProduct: Product = {
+              ...localProduct,
+              description: localProduct.description || null,
+              color: localProduct.color || null,
+              images: localProduct.images || null,
+              size: localProduct.sizes,
+              size_quantities: localProduct.inventory ? 
+                localProduct.inventory.reduce((acc: Record<string, number>, item) => {
+                  acc[item.size] = item.quantity;
+                  return acc;
+                }, {}) : null,
+              is_featured: localProduct.featured || null,
+              is_new: localProduct.isNew || null
+            };
+            
+            setProduct(mappedLocalProduct);
+            
+            // Set related products as other local products
+            const localRelatedProducts = Object.values(require('@/data/products').products)
+              .filter((p: any) => p.id !== id)
+              .slice(0, 4)
+              .map((p: any) => ({
+                ...p,
+                description: p.description || null,
+                color: p.color || null,
+                images: p.images || null,
+                size: p.sizes,
+                size_quantities: p.inventory ? 
+                  p.inventory.reduce((acc: Record<string, number>, item: any) => {
+                    acc[item.size] = item.quantity;
+                    return acc;
+                  }, {}) : null,
+                is_featured: p.featured || null,
+                is_new: p.isNew || null
+              }));
+              
+            setRelatedProducts(localRelatedProducts);
+            return;
+          }
+        } else {
+          // Process Supabase data
+          const processedProduct: Product = {
+            ...productData,
+            // Ensure size_quantities is a Record<string, number>
+            size_quantities: productData.size_quantities ? 
+              (typeof productData.size_quantities === 'string' 
+                ? JSON.parse(productData.size_quantities) 
+                : productData.size_quantities as Record<string, number>)
               : null
-          }));
-          setRelatedProducts(processedRelated);
+          };
+          
+          setProduct(processedProduct);
+          
+          // Fetch related products
+          const { data: relatedData, error: relatedError } = await supabase
+            .from('products')
+            .select('*')
+            .neq('id', id)
+            .limit(4);
+  
+          if (!relatedError && relatedData) {
+            // Process related products
+            const processedRelated = relatedData.map(item => ({
+              ...item,
+              size_quantities: item.size_quantities ? 
+                (typeof item.size_quantities === 'string' 
+                  ? JSON.parse(item.size_quantities) 
+                  : item.size_quantities as Record<string, number>)
+                : null
+            }));
+            setRelatedProducts(processedRelated);
+          }
         }
       } catch (error: any) {
         console.error('Error fetching product:', error);
@@ -160,8 +215,20 @@ const ProductDetail = () => {
 
   // Get inventory quantity for a specific size
   const getQuantityForSize = (size: string): number => {
-    if (!product || !product.size_quantities) return 0;
-    return product.size_quantities[size] || 0;
+    if (!product) return 0;
+    
+    // Try to get from size_quantities
+    if (product.size_quantities && product.size_quantities[size] !== undefined) {
+      return product.size_quantities[size];
+    }
+    
+    // Fallback to inventory if available
+    if (product.inventory) {
+      const sizeItem = product.inventory.find(item => item.size === size);
+      return sizeItem ? sizeItem.quantity : 0;
+    }
+    
+    return 0;
   };
   
   const handleQuantityChange = (e: React.MouseEvent, change: number) => {
@@ -314,9 +381,10 @@ const ProductDetail = () => {
     );
   }
 
-  // Create array of available sizes from product's size_quantities
+  // Create array of available sizes from product's size_quantities or sizes
   const availableSizes = product.size ? product.size : 
-                         (product.size_quantities ? Object.keys(product.size_quantities) : []);
+                        (product.sizes ? product.sizes :
+                        (product.size_quantities ? Object.keys(product.size_quantities) : []));
 
   return (
     <div className="pt-24">
