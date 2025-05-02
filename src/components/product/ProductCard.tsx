@@ -8,7 +8,7 @@ interface ProductInventory {
   quantity: number;
 }
 
-// Updated Product interface to match what we're getting from Supabase
+// Updated Product interface to match what we're getting from both data/products.ts and Supabase
 interface Product {
   id: string;
   name: string;
@@ -16,10 +16,13 @@ interface Product {
   description: string | null;
   color: string | null;
   images: string[] | null;
-  size: string[] | null;
-  size_quantities: Record<string, number> | null;
-  is_featured: boolean | null;
-  is_new: boolean | null;
+  size?: string[] | null;
+  sizes?: string[]; // From data/products.ts
+  size_quantities?: Record<string, number> | null;
+  is_featured?: boolean | null;
+  is_new?: boolean | null;
+  featured?: boolean; // From data/products.ts
+  isNew?: boolean; // From data/products.ts
   isSale?: boolean;
   salePrice?: number;
   inventory?: ProductInventory[];
@@ -46,9 +49,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   // Check if any size has low stock
   const hasLowStock = () => {
-    if (!product.size_quantities) return false;
+    if (product.size_quantities) {
+      return Object.values(product.size_quantities).some(qty => qty <= 3 && qty > 0);
+    } 
     
-    return Object.values(product.size_quantities).some(qty => qty <= 3 && qty > 0);
+    if (product.inventory) {
+      return product.inventory.some(item => item.quantity <= 3 && item.quantity > 0);
+    }
+    
+    return false;
   };
 
   return (

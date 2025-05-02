@@ -1,3 +1,4 @@
+
 export type ProductColor = 'black' | 'khaki';
 export type ProductSize = 'M' | 'L' | 'XL';
 
@@ -19,6 +20,11 @@ export interface Product {
   isNew?: boolean;
   isSale?: boolean;
   salePrice?: number;
+  // Add these properties to match what ProductGrid expects
+  size?: string[];
+  size_quantities?: Record<string, number>;
+  is_featured?: boolean;
+  is_new?: boolean;
 }
 
 export type ProductCollection = {

@@ -1,7 +1,7 @@
 
 import ProductCard from './ProductCard';
 
-// Updated Product interface to match what we're getting from Supabase
+// Updated Product interface to match what we're getting from both data/products.ts and Supabase
 interface Product {
   id: string;
   name: string;
@@ -9,10 +9,16 @@ interface Product {
   description: string | null;
   color: string | null;
   images: string[] | null;
-  size: string[] | null;
-  size_quantities: Record<string, number> | null;
-  is_featured: boolean | null;
-  is_new: boolean | null;
+  size?: string[] | null;
+  sizes?: string[]; // From data/products.ts
+  size_quantities?: Record<string, number> | null;
+  is_featured?: boolean | null;
+  is_new?: boolean | null;
+  featured?: boolean; // From data/products.ts
+  isNew?: boolean; // From data/products.ts
+  isSale?: boolean;
+  salePrice?: number;
+  inventory?: {size: string; quantity: number}[];
 }
 
 interface ProductGridProps {
