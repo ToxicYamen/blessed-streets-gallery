@@ -1,3 +1,4 @@
+
 import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2, ArrowLeft } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -84,6 +85,7 @@ const Cart = () => {
                       </div>
                       <div className="text-sm text-muted-foreground mb-4">
                         <p>Size: {item.size}</p>
+                        {item.color && <p>Color: {item.color}</p>}
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">

@@ -1,3 +1,4 @@
+
 import { createStore } from 'zustand/vanilla';
 import { useStore } from 'zustand';
 import { persist } from 'zustand/middleware';
@@ -9,6 +10,7 @@ export interface CartItem {
     quantity: number;
     image: string;
     size: string;
+    color?: string; // Added color property
 }
 
 interface CartState {

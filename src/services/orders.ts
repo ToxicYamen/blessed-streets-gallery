@@ -21,6 +21,10 @@ export const createOrder = async ({ items, total, shippingAddress, paymentMethod
   // Convert CartItem[] to Json compatible format
   const itemsJson = items as unknown as Json;
 
+  // Get the color from the first item (assuming all items have the same color in an order)
+  // This is just an additional reference for the order
+  const orderColor = items.length > 0 && items[0].color ? items[0].color : null;
+
   const { data, error } = await supabase
     .from('orders')
     .insert({
@@ -30,7 +34,8 @@ export const createOrder = async ({ items, total, shippingAddress, paymentMethod
       shipping_address: shippingAddress,
       payment_method: paymentMethod,
       estimated_delivery: estimatedDelivery.toISOString(),
-      status: 'confirmed'
+      status: 'confirmed',
+      color: orderColor // Store the color in the order
     })
     .select()
     .single();

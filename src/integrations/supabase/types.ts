@@ -9,8 +9,63 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      collections: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          image: string | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image?: string | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image?: string | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      lookbook: {
+        Row: {
+          created_at: string | null
+          id: string
+          image: string
+          order_index: number | null
+          tags: string[] | null
+          title: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          image: string
+          order_index?: number | null
+          tags?: string[] | null
+          title?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          image?: string
+          order_index?: number | null
+          tags?: string[] | null
+          title?: string | null
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
+          color: string | null
           created_at: string | null
           estimated_delivery: string | null
           id: string
@@ -23,6 +78,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          color?: string | null
           created_at?: string | null
           estimated_delivery?: string | null
           id?: string
@@ -35,6 +91,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          color?: string | null
           created_at?: string | null
           estimated_delivery?: string | null
           id?: string
@@ -47,6 +104,68 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      products: {
+        Row: {
+          collection_id: string | null
+          color: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          images: string[] | null
+          is_featured: boolean | null
+          is_new: boolean | null
+          name: string
+          price: number
+          size: string[] | null
+          size_quantities: Json | null
+          slug: string
+          stock: number
+          updated_at: string | null
+        }
+        Insert: {
+          collection_id?: string | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_featured?: boolean | null
+          is_new?: boolean | null
+          name: string
+          price?: number
+          size?: string[] | null
+          size_quantities?: Json | null
+          slug: string
+          stock?: number
+          updated_at?: string | null
+        }
+        Update: {
+          collection_id?: string | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_featured?: boolean | null
+          is_new?: boolean | null
+          name?: string
+          price?: number
+          size?: string[] | null
+          size_quantities?: Json | null
+          slug?: string
+          stock?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_product_collection"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -66,7 +185,7 @@ export type Database = {
           created_at?: string | null
           email: string
           first_name?: string | null
-          id: string
+          id?: string
           last_name?: string | null
           phone?: string | null
           updated_at?: string | null
