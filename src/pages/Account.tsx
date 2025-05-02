@@ -23,6 +23,7 @@ const Account = () => {
   const { user, loading: authLoading, logout } = useAuth(true);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [fetchAttempted, setFetchAttempted] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -41,7 +42,10 @@ const Account = () => {
           .eq('id', user.id)
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching profile:', error.message);
+          throw error;
+        }
         
         if (isMounted) {
           console.log('Profile data received:', data);
@@ -55,22 +59,47 @@ const Account = () => {
       } finally {
         if (isMounted) {
           setProfileLoading(false);
+          setFetchAttempted(true);
         }
       }
     };
 
     // Only try to fetch profile when auth is done loading and we have a user
-    if (!authLoading && user) {
+    if (!authLoading && user && !fetchAttempted) {
       fetchProfile();
     } else if (!authLoading) {
       // Auth is done loading but no user
       setProfileLoading(false);
+      setFetchAttempted(true);
     }
 
     return () => {
       isMounted = false;
     };
-  }, [authLoading, user]);
+  }, [authLoading, user, fetchAttempted]);
+
+  // Force refetch profile function
+  const refetchProfile = async () => {
+    if (!user?.id) return;
+    
+    setProfileLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) throw error;
+      
+      setProfile(data);
+    } catch (error: any) {
+      console.error('Error refetching profile:', error);
+      toast.error(`Error refetching profile: ${error.message}`);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
 
   // Show loading state while checking authentication
   if (authLoading) {
@@ -96,25 +125,7 @@ const Account = () => {
             <ProfileSection 
               profile={profile} 
               loading={profileLoading} 
-              onProfileUpdated={() => {
-                console.log("Profile updated, refetching...");
-                setProfileLoading(true);
-                supabase
-                  .from('profiles')
-                  .select('*')
-                  .eq('id', user?.id)
-                  .single()
-                  .then(({ data, error }) => {
-                    if (error) {
-                      console.error('Error refetching profile:', error);
-                      toast.error(`Error refetching profile: ${error.message}`);
-                    } else {
-                      console.log('Updated profile data:', data);
-                      setProfile(data);
-                    }
-                    setProfileLoading(false);
-                  });
-              }} 
+              onProfileUpdated={refetchProfile} 
             />
             {user && <OrdersList userId={user.id} />}
           </div>

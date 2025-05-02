@@ -2,7 +2,7 @@
 import { createStore } from 'zustand/vanilla';
 import { useStore } from 'zustand';
 
-interface CartItem {
+export interface CartItem {
     id: string;
     name: string;
     price: number;
@@ -10,6 +10,7 @@ interface CartItem {
     size: string;
     color: string;
     quantity: number;
+    image?: string; // Added for compatibility
 }
 
 interface CartStore {

@@ -4,6 +4,7 @@ import { useCartStore } from '@/lib/store/cart';
 import { createOrder } from '@/services/orders';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { getProductById } from '@/data/products';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -17,11 +18,15 @@ const CheckoutPage = () => {
     cvv: ''
   });
   const [loading, setLoading] = useState(false);
+  const [isStockValid, setIsStockValid] = useState(true);
+  const [stockLimits, setStockLimits] = useState<Record<string, Record<string, number>>>({});
   
-  // Load saved address if user is logged in
+  // Load saved address if user is logged in and fetch stock information
   useEffect(() => {
-    const loadUserAddress = async () => {
+    const loadUserAddressAndStock = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      
+      // Fetch user profile if logged in
       if (session?.user) {
         const { data: profile } = await supabase
           .from('profiles')
@@ -33,10 +38,62 @@ const CheckoutPage = () => {
           setShippingAddress(profile.address);
         }
       }
+      
+      // Check stock for all items in cart
+      const productIds = [...new Set(items.map(item => item.id))];
+      const limits: Record<string, Record<string, number>> = {};
+      
+      // Try to get products from Supabase
+      const { data: supabaseProducts } = await supabase
+        .from('products')
+        .select('id, size_quantities')
+        .in('id', productIds);
+      
+      // Process Supabase products
+      if (supabaseProducts && supabaseProducts.length > 0) {
+        supabaseProducts.forEach(product => {
+          if (product.size_quantities) {
+            limits[product.id] = {};
+            // Ensure size_quantities is treated as Record<string, number>
+            Object.entries(product.size_quantities as Record<string, number>).forEach(([size, qty]) => {
+              limits[product.id][size] = qty;
+            });
+          }
+        });
+      }
+      
+      // Process local products for any that weren't found in Supabase
+      productIds.forEach(id => {
+        if (!limits[id]) {
+          const localProduct = getProductById(id);
+          if (localProduct && localProduct.inventory) {
+            limits[id] = {};
+            localProduct.inventory.forEach(inv => {
+              limits[id][inv.size] = inv.quantity;
+            });
+          }
+        }
+      });
+      
+      setStockLimits(limits);
+      
+      // Validate stock levels
+      let stockValid = true;
+      items.forEach(item => {
+        const availableStock = limits[item.id]?.[item.size] || 0;
+        if (item.quantity > availableStock) {
+          stockValid = false;
+        }
+      });
+      
+      setIsStockValid(stockValid);
+      if (!stockValid) {
+        toast.error('Some items in your cart are no longer available in the requested quantity.');
+      }
     };
     
-    loadUserAddress();
-  }, []);
+    loadUserAddressAndStock();
+  }, [items]);
 
   const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
 
@@ -44,6 +101,12 @@ const CheckoutPage = () => {
     try {
       if (!shippingAddress) {
         toast.error('Please enter a shipping address');
+        return;
+      }
+
+      if (!isStockValid) {
+        toast.error('Please review your cart. Some items are out of stock or have insufficient quantity.');
+        navigate('/cart');
         return;
       }
 
@@ -95,23 +158,33 @@ const CheckoutPage = () => {
           {/* Order Summary */}
           <div>
             <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-            {items.map((item) => (
-              <div key={`${item.id}-${item.size}`} className="flex items-center space-x-4 mb-4">
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-16 h-16 object-cover rounded"
-                />
-                <div className="flex-1">
-                  <h3 className="font-medium">{item.name}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Size: {item.size}
-                  </p>
-                  <p className="text-sm">Qty: {item.quantity}</p>
+            {items.map((item) => {
+              const availableStock = stockLimits[item.id]?.[item.size] || 0;
+              const stockIssue = item.quantity > availableStock;
+              
+              return (
+                <div key={`${item.id}-${item.size}`} className="flex items-center space-x-4 mb-4">
+                  <img
+                    src={item.image || (item.images && item.images[0])}
+                    alt={item.name}
+                    className="w-16 h-16 object-cover rounded"
+                  />
+                  <div className="flex-1">
+                    <h3 className="font-medium">{item.name}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Size: {item.size}
+                    </p>
+                    <p className="text-sm">Qty: {item.quantity}</p>
+                    {stockIssue && (
+                      <p className="text-red-500 text-sm">
+                        Only {availableStock} available
+                      </p>
+                    )}
+                  </div>
+                  <p className="font-medium">{item.price.toFixed(2)} €</p>
                 </div>
-                <p className="font-medium">{item.price.toFixed(2)} €</p>
-              </div>
-            ))}
+              );
+            })}
 
             <div className="border-t border-gray-200 dark:border-gray-800 mt-4 pt-4">
               <div className="flex justify-between mb-2">
@@ -251,9 +324,9 @@ const CheckoutPage = () => {
 
             <button
               onClick={handleSubmitOrder}
-              disabled={loading}
+              disabled={loading || !isStockValid}
               className={`w-full font-medium rounded-lg py-2.5 mt-6 transition-colors ${
-                loading ? 'opacity-70 cursor-not-allowed' : ''
+                loading || !isStockValid ? 'opacity-70 cursor-not-allowed' : ''
               } ${
                 paymentMethod === 'paypal'
                   ? 'bg-[#0070BA] hover:bg-[#003087] text-white'

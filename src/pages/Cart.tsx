@@ -1,4 +1,3 @@
-
 import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2, ArrowLeft } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -16,40 +15,58 @@ const Cart = () => {
   const { cartItems, updateCartItemQuantity, removeFromCart } = useCart();
   const navigate = useNavigate();
   const [stockLimits, setStockLimits] = useState<Record<string, Record<string, number>>>({});
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fetch stock information when cart changes
   useEffect(() => {
     const fetchStockInfo = async () => {
-      const productIds = [...new Set(cartItems.map(item => item.id))];
-      const limits: Record<string, Record<string, number>> = {};
-      
-      // Try to get products from Supabase
-      const { data: supabaseProducts } = await supabase
-        .from('products')
-        .select('id, size_quantities')
-        .in('id', productIds);
-      
-      // Process Supabase products
-      if (supabaseProducts) {
-        supabaseProducts.forEach(product => {
-          limits[product.id] = product.size_quantities || {};
-        });
-      }
-      
-      // Process local products for any that weren't found in Supabase
-      productIds.forEach(id => {
-        if (!limits[id]) {
-          const localProduct = getProductById(id);
-          if (localProduct && localProduct.inventory) {
-            limits[id] = {};
-            localProduct.inventory.forEach(inv => {
-              limits[id][inv.size] = inv.quantity;
-            });
-          }
+      setIsLoading(true);
+      try {
+        const productIds = [...new Set(cartItems.map(item => item.id))];
+        const limits: Record<string, Record<string, number>> = {};
+        
+        // Try to get products from Supabase
+        const { data: supabaseProducts, error } = await supabase
+          .from('products')
+          .select('id, size_quantities')
+          .in('id', productIds);
+        
+        if (error) {
+          console.error('Error fetching products from Supabase:', error);
         }
-      });
-      
-      setStockLimits(limits);
+        
+        // Process Supabase products
+        if (supabaseProducts && supabaseProducts.length > 0) {
+          supabaseProducts.forEach(product => {
+            if (product.size_quantities) {
+              limits[product.id] = {};
+              // Ensure size_quantities is treated as Record<string, number>
+              Object.entries(product.size_quantities as Record<string, number>).forEach(([size, qty]) => {
+                limits[product.id][size] = qty;
+              });
+            }
+          });
+        }
+        
+        // Process local products for any that weren't found in Supabase
+        productIds.forEach(id => {
+          if (!limits[id]) {
+            const localProduct = getProductById(id);
+            if (localProduct && localProduct.inventory) {
+              limits[id] = {};
+              localProduct.inventory.forEach(inv => {
+                limits[id][inv.size] = inv.quantity;
+              });
+            }
+          }
+        });
+        
+        setStockLimits(limits);
+      } catch (err) {
+        console.error('Error in fetchStockInfo:', err);
+      } finally {
+        setIsLoading(false);
+      }
     };
     
     fetchStockInfo();
@@ -131,7 +148,12 @@ const Cart = () => {
           <div className="grid grid-cols-1 md:grid-cols-[1fr,400px] gap-8">
             {/* Cart Items */}
             <div className="space-y-6">
-              {cartItems.length === 0 ? (
+              {isLoading ? (
+                <div className="flex justify-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
+                  <span className="ml-3">Loading cart...</span>
+                </div>
+              ) : cartItems.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-lg mb-4">Dein Warenkorb ist leer</p>
                   <Link
@@ -151,7 +173,7 @@ const Cart = () => {
                   return (
                     <div key={`${item.id}-${item.size}`} className="flex gap-6 p-4 bg-accent/5 rounded-lg">
                       <img
-                        src={item.image}
+                        src={item.image || (item.images && item.images[0])}
                         alt={item.name}
                         className="w-24 h-24 object-cover rounded-md"
                       />

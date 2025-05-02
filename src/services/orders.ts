@@ -46,35 +46,49 @@ export const createOrder = async ({ items, total, shippingAddress, paymentMethod
 
   // Update product inventory in the database for each item
   for (const item of items) {
-    // First try to get the product from Supabase
-    const { data: supabaseProduct } = await supabase
-      .from('products')
-      .select('*')
-      .eq('id', item.id)
-      .single();
-
-    if (supabaseProduct) {
-      // Handle Supabase product inventory update
-      const currentQuantities = supabaseProduct.size_quantities || {};
-      const newQuantities = { ...currentQuantities };
-      
-      if (newQuantities[item.size]) {
-        newQuantities[item.size] = Math.max(0, newQuantities[item.size] - item.quantity);
-      }
-      
-      await supabase
+    try {
+      // First try to get the product from Supabase
+      const { data: supabaseProduct } = await supabase
         .from('products')
-        .update({ size_quantities: newQuantities })
-        .eq('id', item.id);
-    } else {
-      // Handle local product inventory update
-      const localProduct = getProductById(item.id);
-      if (localProduct && localProduct.inventory) {
-        const sizeInventory = localProduct.inventory.find(inv => inv.size === item.size);
-        if (sizeInventory) {
-          sizeInventory.quantity = Math.max(0, sizeInventory.quantity - item.quantity);
+        .select('*')
+        .eq('id', item.id)
+        .single();
+
+      if (supabaseProduct) {
+        // Handle Supabase product inventory update
+        const currentQuantities = supabaseProduct.size_quantities || {};
+        
+        // Create a new object for the updated quantities
+        const newQuantities: Record<string, number> = {};
+        
+        // Copy existing quantities
+        Object.keys(currentQuantities).forEach(size => {
+          newQuantities[size] = currentQuantities[size];
+        });
+        
+        // Update the specific size quantity
+        if (item.size in newQuantities) {
+          newQuantities[item.size] = Math.max(0, newQuantities[item.size] - item.quantity);
+        }
+        
+        // Update the database
+        await supabase
+          .from('products')
+          .update({ size_quantities: newQuantities })
+          .eq('id', item.id);
+      } else {
+        // Handle local product inventory update
+        const localProduct = getProductById(item.id);
+        if (localProduct && localProduct.inventory) {
+          const sizeInventory = localProduct.inventory.find(inv => inv.size === item.size);
+          if (sizeInventory) {
+            sizeInventory.quantity = Math.max(0, sizeInventory.quantity - item.quantity);
+          }
         }
       }
+    } catch (error) {
+      console.error('Error updating inventory for product:', item.id, error);
+      // Continue with other items even if this one fails
     }
   }
 
