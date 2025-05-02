@@ -50,7 +50,12 @@ export const products: ProductCollection = {
       { size: "XL", quantity: 10 }
     ],
     featured: true,
-    isNew: true
+    isNew: true,
+    // Add these properties to match what ProductGrid expects
+    size: ["M", "L", "XL"],
+    size_quantities: { "M": 3, "L": 18, "XL": 10 },
+    is_featured: true,
+    is_new: true
   },
   "khaki-hoodie": {
     id: "khaki-hoodie",
@@ -71,7 +76,12 @@ export const products: ProductCollection = {
       { size: "XL", quantity: 9 }
     ],
     featured: true,
-    isNew: true
+    isNew: true,
+    // Add these properties to match what ProductGrid expects
+    size: ["M", "L", "XL"],
+    size_quantities: { "M": 19, "L": 21, "XL": 9 },
+    is_featured: true,
+    is_new: true
   }
 };
 

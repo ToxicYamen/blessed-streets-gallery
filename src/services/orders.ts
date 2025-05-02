@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { CartItem } from "@/lib/store/cart";
 import { Json } from "@/integrations/supabase/types";
+import { products as localProducts, getProductById } from "@/data/products";
 
 interface CreateOrderParams {
   items: CartItem[];
@@ -25,7 +26,8 @@ export const createOrder = async ({ items, total, shippingAddress, paymentMethod
   // This is just an additional reference for the order
   const orderColor = items.length > 0 && items[0].color ? items[0].color : null;
 
-  const { data, error } = await supabase
+  // Create the order
+  const { data: orderData, error: orderError } = await supabase
     .from('orders')
     .insert({
       user_id: session.user.id,
@@ -40,8 +42,43 @@ export const createOrder = async ({ items, total, shippingAddress, paymentMethod
     .select()
     .single();
 
-  if (error) throw error;
-  return data;
+  if (orderError) throw orderError;
+
+  // Update product inventory in the database for each item
+  for (const item of items) {
+    // First try to get the product from Supabase
+    const { data: supabaseProduct } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', item.id)
+      .single();
+
+    if (supabaseProduct) {
+      // Handle Supabase product inventory update
+      const currentQuantities = supabaseProduct.size_quantities || {};
+      const newQuantities = { ...currentQuantities };
+      
+      if (newQuantities[item.size]) {
+        newQuantities[item.size] = Math.max(0, newQuantities[item.size] - item.quantity);
+      }
+      
+      await supabase
+        .from('products')
+        .update({ size_quantities: newQuantities })
+        .eq('id', item.id);
+    } else {
+      // Handle local product inventory update
+      const localProduct = getProductById(item.id);
+      if (localProduct && localProduct.inventory) {
+        const sizeInventory = localProduct.inventory.find(inv => inv.size === item.size);
+        if (sizeInventory) {
+          sizeInventory.quantity = Math.max(0, sizeInventory.quantity - item.quantity);
+        }
+      }
+    }
+  }
+
+  return orderData;
 };
 
 export const cancelOrder = async (orderId: string) => {

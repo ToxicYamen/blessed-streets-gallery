@@ -1,3 +1,4 @@
+
 import { createStore } from 'zustand/vanilla';
 import { useStore } from 'zustand';
 
@@ -14,28 +15,32 @@ interface CartItem {
 interface CartStore {
     cart: CartItem[];
     total: number;
-    addToCart: (item: CartItem) => void;
+    addToCart: (item: CartItem, maxQuantity: number) => void;
     removeFromCart: (itemId: string) => void;
-    updateQuantity: (itemId: string, quantity: number) => void;
+    updateQuantity: (itemId: string, quantity: number, maxQuantity: number) => void;
     clearCart: () => void;
 }
 
 const store = createStore<CartStore>((set) => ({
     cart: [],
     total: 0,
-    addToCart: (item) =>
+    addToCart: (item, maxQuantity) =>
         set((state) => {
             const existingItem = state.cart.find((i) => i.id === item.id);
             if (existingItem) {
+                // Don't add more than what's in stock
+                const newQuantity = Math.min(existingItem.quantity + 1, maxQuantity);
                 const updatedCart = state.cart.map((i) =>
-                    i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+                    i.id === item.id ? { ...i, quantity: newQuantity } : i
                 );
                 return {
                     cart: updatedCart,
                     total: updatedCart.reduce((sum, item) => sum + item.price * item.quantity, 0),
                 };
             }
-            const newCart = [...state.cart, { ...item, quantity: 1 }];
+            // For new items, make sure we don't add more than what's in stock
+            const safeQuantity = Math.min(1, maxQuantity);
+            const newCart = [...state.cart, { ...item, quantity: safeQuantity }];
             return {
                 cart: newCart,
                 total: newCart.reduce((sum, item) => sum + item.price * item.quantity, 0),
@@ -49,10 +54,12 @@ const store = createStore<CartStore>((set) => ({
                 total: newCart.reduce((sum, item) => sum + item.price * item.quantity, 0),
             };
         }),
-    updateQuantity: (itemId, quantity) =>
+    updateQuantity: (itemId, quantity, maxQuantity) =>
         set((state) => {
+            // Ensure we don't exceed the maximum stock
+            const safeQuantity = Math.min(quantity, maxQuantity);
             const updatedCart = state.cart.map((item) =>
-                item.id === itemId ? { ...item, quantity } : item
+                item.id === itemId ? { ...item, quantity: safeQuantity } : item
             );
             return {
                 cart: updatedCart,

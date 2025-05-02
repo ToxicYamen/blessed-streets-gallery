@@ -8,10 +8,52 @@ import { toast } from 'sonner';
 import { BackgroundGradient } from '@/components/ui/background-gradient';
 import { pageTransition } from '@/lib/transitions';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { getProductById } from '@/data/products';
 
 const Cart = () => {
   const { cartItems, updateCartItemQuantity, removeFromCart } = useCart();
   const navigate = useNavigate();
+  const [stockLimits, setStockLimits] = useState<Record<string, Record<string, number>>>({});
+
+  // Fetch stock information when cart changes
+  useEffect(() => {
+    const fetchStockInfo = async () => {
+      const productIds = [...new Set(cartItems.map(item => item.id))];
+      const limits: Record<string, Record<string, number>> = {};
+      
+      // Try to get products from Supabase
+      const { data: supabaseProducts } = await supabase
+        .from('products')
+        .select('id, size_quantities')
+        .in('id', productIds);
+      
+      // Process Supabase products
+      if (supabaseProducts) {
+        supabaseProducts.forEach(product => {
+          limits[product.id] = product.size_quantities || {};
+        });
+      }
+      
+      // Process local products for any that weren't found in Supabase
+      productIds.forEach(id => {
+        if (!limits[id]) {
+          const localProduct = getProductById(id);
+          if (localProduct && localProduct.inventory) {
+            limits[id] = {};
+            localProduct.inventory.forEach(inv => {
+              limits[id][inv.size] = inv.quantity;
+            });
+          }
+        }
+      });
+      
+      setStockLimits(limits);
+    };
+    
+    fetchStockInfo();
+  }, [cartItems]);
 
   const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
 
@@ -19,10 +61,25 @@ const Cart = () => {
     const item = cartItems.find(item => item.id === itemId && item.size === size);
     if (item) {
       const newQuantity = item.quantity + change;
+      
+      // Check if we have available stock
+      const availableStock = stockLimits[itemId]?.[size] || 0;
+      
+      // Don't allow increasing beyond available stock
+      if (change > 0 && newQuantity > availableStock) {
+        toast.error(`Sorry, only ${availableStock} items available in stock`);
+        return;
+      }
+      
+      // Don't allow less than 1
       if (newQuantity >= 1) {
         updateCartItemQuantity(itemId, size, newQuantity);
       }
     }
+  };
+
+  const getMaxQuantity = (itemId: string, size: string) => {
+    return stockLimits[itemId]?.[size] || 0;
   };
 
   const handleRemove = (itemId: string, size: string) => {
@@ -31,6 +88,21 @@ const Cart = () => {
   };
 
   const handleCheckout = async () => {
+    // Check if any items exceed available stock
+    let hasStockIssue = false;
+    
+    cartItems.forEach(item => {
+      const availableStock = stockLimits[item.id]?.[item.size] || 0;
+      if (item.quantity > availableStock) {
+        toast.error(`Not enough stock for ${item.name} (${item.size}). Only ${availableStock} available.`);
+        hasStockIssue = true;
+      }
+    });
+    
+    if (hasStockIssue) {
+      return;
+    }
+    
     await pageTransition(() => {
       navigate('/checkout');
     });
@@ -71,52 +143,68 @@ const Cart = () => {
                   </Link>
                 </div>
               ) : (
-                cartItems.map((item) => (
-                  <div key={`${item.id}-${item.size}`} className="flex gap-6 p-4 bg-accent/5 rounded-lg">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-24 h-24 object-cover rounded-md"
-                    />
-                    <div className="flex-1">
-                      <div className="flex justify-between mb-2">
-                        <h3 className="font-medium">{item.name}</h3>
-                        <span>{(item.price * item.quantity).toFixed(2)} €</span>
-                      </div>
-                      <div className="text-sm text-muted-foreground mb-4">
-                        <p>Size: {item.size}</p>
-                        {item.color && <p>Color: {item.color}</p>}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                cartItems.map((item) => {
+                  const maxQuantity = getMaxQuantity(item.id, item.size);
+                  const isOutOfStock = maxQuantity === 0;
+                  const isLimitReached = item.quantity >= maxQuantity;
+                  
+                  return (
+                    <div key={`${item.id}-${item.size}`} className="flex gap-6 p-4 bg-accent/5 rounded-lg">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-24 h-24 object-cover rounded-md"
+                      />
+                      <div className="flex-1">
+                        <div className="flex justify-between mb-2">
+                          <h3 className="font-medium">{item.name}</h3>
+                          <span>{(item.price * item.quantity).toFixed(2)} €</span>
+                        </div>
+                        <div className="text-sm text-muted-foreground mb-4">
+                          <p>Size: {item.size}</p>
+                          {item.color && <p>Color: {item.color}</p>}
+                          {isOutOfStock && (
+                            <p className="text-red-500 font-medium mt-1">Out of stock</p>
+                          )}
+                          {!isOutOfStock && maxQuantity <= 3 && (
+                            <p className="text-amber-500 font-medium mt-1">Only {maxQuantity} left</p>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => handleQuantityChange(item.id, item.size, -1)}
+                              className={cn(
+                                "w-8 h-8 flex items-center justify-center border rounded-md transition-colors",
+                                item.quantity <= 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-accent"
+                              )}
+                              disabled={item.quantity <= 1}
+                            >
+                              <Minus className="h-4 w-4" />
+                            </button>
+                            <span className="w-8 text-center">{item.quantity}</span>
+                            <button
+                              onClick={() => handleQuantityChange(item.id, item.size, 1)}
+                              className={cn(
+                                "w-8 h-8 flex items-center justify-center border rounded-md transition-colors",
+                                isLimitReached || isOutOfStock ? "opacity-50 cursor-not-allowed" : "hover:bg-accent"
+                              )}
+                              disabled={isLimitReached || isOutOfStock}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </button>
+                          </div>
                           <button
-                            onClick={() => handleQuantityChange(item.id, item.size, -1)}
-                            className={cn(
-                              "w-8 h-8 flex items-center justify-center border rounded-md transition-colors",
-                              item.quantity <= 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-accent"
-                            )}
-                            disabled={item.quantity <= 1}
+                            onClick={() => handleRemove(item.id, item.size)}
+                            className="text-red-500 hover:text-red-600 transition-colors"
                           >
-                            <Minus className="h-4 w-4" />
-                          </button>
-                          <span className="w-8 text-center">{item.quantity}</span>
-                          <button
-                            onClick={() => handleQuantityChange(item.id, item.size, 1)}
-                            className="w-8 h-8 flex items-center justify-center border rounded-md hover:bg-accent transition-colors"
-                          >
-                            <Plus className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
-                        <button
-                          onClick={() => handleRemove(item.id, item.size)}
-                          className="text-red-500 hover:text-red-600 transition-colors"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
                       </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 
