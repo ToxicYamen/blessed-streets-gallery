@@ -13,13 +13,13 @@ interface LookbookItem {
 }
 
 const Lookbook = () => {
-  // Mock lookbook data - in a real app, this would come from an API
+  // Kampagnen-Fotos aus BlessedStreetsResource (weboptimiert in public/brand).
   const [lookbookItems] = useState<LookbookItem[]>([
     {
       id: 'look1',
       title: 'Urban Essentials',
       description: 'Minimal streetwear for the modern wardrobe.',
-      image: '/lovable-uploads/ae0b165b-1ee3-42d3-b7b6-ef45f7449951.png',
+      image: '/brand/black-02-1080.webp',
       type: 'image',
       season: 'essentials'
     },
@@ -27,7 +27,7 @@ const Lookbook = () => {
       id: 'look2',
       title: 'Winter Layers',
       description: 'Premium layering pieces for the cold season.',
-      image: '/lovable-uploads/68bd47c8-4553-4f02-8047-e01949d85881.png',
+      image: '/brand/sage-02-1080.webp',
       type: 'image',
       season: 'winter'
     },
@@ -35,7 +35,7 @@ const Lookbook = () => {
       id: 'look3',
       title: 'Limited Edition',
       description: 'Exclusive drops with limited availability.',
-      image: '/lovable-uploads/aedc4690-8ddc-49e3-a7a6-605988064d17.png',
+      image: '/brand/life-02-1080.webp',
       type: 'image',
       season: 'limited'
     },
@@ -43,7 +43,7 @@ const Lookbook = () => {
       id: 'look4',
       title: 'Street Couture',
       description: 'Elevated basics with a distinctive edge.',
-      image: '/lovable-uploads/14cc0786-37aa-4471-8f05-f800b6420083.png',
+      image: '/brand/life-03-1080.webp',
       type: 'image',
       season: 'essentials'
     },
@@ -51,7 +51,7 @@ const Lookbook = () => {
       id: 'look5',
       title: 'Winter Statement',
       description: 'Bold statement pieces for winter.',
-      image: '/lovable-uploads/bc7f81ea-fb32-4ff2-915a-b8a677272b83.png',
+      image: '/brand/black-03-1080.webp',
       type: 'image',
       season: 'winter'
     },
@@ -59,7 +59,7 @@ const Lookbook = () => {
       id: 'look6',
       title: 'Essential Minimalism',
       description: 'Refined minimalist approach to everyday wear.',
-      image: '/lovable-uploads/17f078c8-2f1a-4e2e-8f56-39cc379c263c.png',
+      image: '/brand/sage-03-1080.webp',
       type: 'image',
       season: 'essentials'
     }

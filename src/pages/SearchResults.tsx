@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { getAllProducts, Product } from '@/data/products';
+import { useProducts } from '@/hooks/use-products';
+import type { Product } from '@/types/product';
 import ProductGrid from '@/components/product/ProductGrid';
 import { SearchInput } from '@/components/ui/search-input';
 import { Button } from '@/components/ui/button';
@@ -16,11 +17,11 @@ const SearchResults = () => {
   const [selectedColor, setSelectedColor] = useState<string>('all');
   const [results, setResults] = useState<Product[]>([]);
 
+  const { data: allProducts = [], isLoading } = useProducts();
+
   useEffect(() => {
     // Perform the search when the component mounts or when search parameters change
     const performSearch = () => {
-      const allProducts = getAllProducts();
-
       // Filter products based on search query and selected filters
       const filteredProducts = allProducts.filter(product => {
         const matchesQuery = initialQuery ?
@@ -37,7 +38,7 @@ const SearchResults = () => {
     };
 
     performSearch();
-  }, [initialQuery, selectedColor, selectedSize]);
+  }, [initialQuery, selectedColor, selectedSize, allProducts]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +48,6 @@ const SearchResults = () => {
     window.history.pushState({}, '', `${location.pathname}?${newSearchParams.toString()}`);
 
     // Trigger a search with the updated query
-    const allProducts = getAllProducts();
     const filteredProducts = allProducts.filter(product => {
       const matchesQuery = searchQuery ?
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -191,7 +191,11 @@ const SearchResults = () => {
 
             {/* Results */}
             <div className="flex-1">
-              {results.length === 0 ? (
+              {isLoading ? (
+                <div className="p-8 text-center">
+                  <p className="text-mono-400">Produkte werden geladen…</p>
+                </div>
+              ) : results.length === 0 ? (
                 <div className="p-8 text-center">
                   <h3 className="text-xl mb-2">No products found</h3>
                   <p className="text-mono-400">Try adjusting your search or filters to find products.</p>

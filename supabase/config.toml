@@ -1,1 +1,18 @@
-project_id = "yyhhbqldbeelbyfnmltf"
+project_id = "xsyjrijezdajiojxgzzr"
+
+# Öffentliche Functions — werden vom Shop ohne Supabase-JWT aufgerufen
+# (Gast-Checkout sendet keinen Authorization-Header; Stripe ruft den Webhook
+# ohne JWT auf). Ohne verify_jwt=false blockt das Functions-Gateway mit 401,
+# bevor unser Code überhaupt läuft.
+[functions.create-checkout-session]
+verify_jwt = false
+
+[functions.verify-checkout-session]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+# refund-order / send-shipping-notice / invite-user / send-support-reply
+# bleiben beim Default (verify_jwt = true): sie verlangen ohnehin ein
+# Admin-JWT und prüfen die Rolle zusätzlich selbst.

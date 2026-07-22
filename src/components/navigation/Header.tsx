@@ -33,44 +33,36 @@ export const Header = () => {
   const { cartItems } = useCart();
   const { theme } = useTheme();
 
+  // ⚠️ This callback MUST stay synchronous and MUST NOT await a supabase call.
+  // GoTrueClient awaits every subscriber's callback while holding the auth lock;
+  // a supabase.from(...) inside internally awaits getSession(), which awaits that
+  // same lock — a deadlock that wedges auth for the whole page (products stuck on
+  // skeletons, checkout button spinning). The profile lookup lives in a separate
+  // effect keyed on the user id, which runs on a normal tick without the lock held.
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user || null);
-      
-      if (session?.user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('avatar_url')
-          .eq('id', session.user.id)
-          .single();
-        
-        setAvatarUrl(data?.avatar_url || null);
-      }
-    };
-    
-    getUser();
-    
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user || null);
-      
-      if (session?.user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('avatar_url')
-          .eq('id', session.user.id)
-          .single();
-        
-        setAvatarUrl(data?.avatar_url || null);
-      } else {
-        setAvatarUrl(null);
-      }
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (!session?.user) setAvatarUrl(null);
     });
-    
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
+    return () => authListener.subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    const uid = user?.id;
+    if (!uid) return;
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', uid)
+        .maybeSingle();
+      if (!cancelled) setAvatarUrl(data?.avatar_url ?? null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -163,9 +155,55 @@ export const Header = () => {
             : "bg-black/40 backdrop-blur-md border-b border-black/10" // Light Mode: Dunkler schwarzer Blur
         )}
       >
-        <div className="blesssed-container flex items-center justify-between mt-2">
-          <Link to="/" className="text-xl md:text-2xl font-bold tracking-tighter text-white" data-navigation="true">
-            Blessed streets
+        {/* ── Mobile: ☰ + Suche links · Logo mittig · Konto + Warenkorb rechts
+               (exakt nach Kampagnen-Referenz) ─────────────────────────────── */}
+        <div className="blesssed-container relative flex md:hidden items-center justify-between mt-2">
+          <div className="flex items-center">
+            <button className="p-2 text-white" onClick={toggleMenu} aria-label="Menü">
+              <Menu size={22} />
+            </button>
+            <button
+              className="p-2 text-white"
+              onClick={() => navigate('/search')}
+              aria-label="Suche"
+            >
+              <Search className="h-5 w-5" />
+            </button>
+          </div>
+
+          <Link
+            to="/"
+            data-navigation="true"
+            aria-label="Blessed Streets — Startseite"
+            className="absolute left-1/2 -translate-x-1/2"
+          >
+            <img src="/blessed-streets-logo.svg" alt="Blessed Streets" className="h-8 w-auto" />
+          </Link>
+
+          <div className="flex items-center">
+            <button className="p-2 text-white" onClick={handleUserClick} aria-label="Konto">
+              <User className="h-5 w-5" />
+            </button>
+            <div
+              className="relative cursor-pointer p-2"
+              onClick={handleCartClick}
+              data-navigation="true"
+              aria-label="Warenkorb"
+            >
+              <ShoppingBag className="w-5 h-5 text-white" />
+              {cartItems.length > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {cartItems.reduce((total, item) => total + item.quantity, 0)}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Desktop ─────────────────────────────────────────────────────── */}
+        <div className="blesssed-container hidden md:flex items-center justify-between mt-2">
+          <Link to="/" data-navigation="true" aria-label="Blessed Streets — Startseite">
+            <img src="/blessed-streets-logo.svg" alt="Blessed Streets" className="h-9 w-auto" />
           </Link>
 
           <nav className="hidden md:flex items-center space-x-8 text-sm">
@@ -328,13 +366,6 @@ export const Header = () => {
               )}
             </button>
 
-            <button
-              className="p-1 lg:hidden md:hidden"
-              onClick={toggleMenu}
-              aria-label="Menu"
-            >
-              <Menu size={24} className="text-white" />
-            </button>
           </div>
         </div>
       </header>
@@ -343,12 +374,11 @@ export const Header = () => {
         <div className="fixed inset-0 bg-black z-50 lg:hidden md:hidden">
           <div className="blesssed-container h-full flex flex-col">
             <div className="flex justify-between items-center py-5">
-              <span className="text-xl md:text-2xl font-bold tracking-tighter text-white">
-                Blessed streets
-              </span>
+              <img src="/blessed-streets-logo.svg" alt="Blessed Streets" className="h-8 w-auto" />
               <button
                 onClick={() => setIsMenuOpen(false)}
                 className="text-white"
+                aria-label="Menü schließen"
               >
                 <X size={24} />
               </button>

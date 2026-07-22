@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, ChevronRight } from 'lucide-react';
 import AnimatedImage from '@/components/ui/AnimatedImage';
 import ProductGrid from '@/components/product/ProductGrid';
-import { getFeaturedProducts, getNewArrivals } from '@/data/products';
+import { useFeaturedProducts, useNewArrivals } from '@/hooks/use-products';
 import { scrollReveal, scrollRevealStagger } from '@/lib/transitions';
 import LampDemo from '@/components/lamp-demo';
 import { Input } from '@/components/ui/input';
@@ -14,8 +14,8 @@ import { SparklesCore } from "@/components/ui/sparkles";
 const HomePage = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
-  const featuredProducts = getFeaturedProducts();
-  const newArrivals = getNewArrivals();
+  const { data: featuredProducts = [] } = useFeaturedProducts();
+  const { data: newArrivals = [] } = useNewArrivals();
   const heroRef = useRef<HTMLDivElement>(null);
   const productsRef = useRef<HTMLDivElement>(null);
   const productCardsRef = useRef<HTMLDivElement[]>([]);
@@ -69,10 +69,12 @@ const HomePage = () => {
           loop
           muted
           playsInline
+          poster="/brand/hero-poster.webp"
           className={`w-full h-full object-cover transition-opacity duration-1000 ${isVideoLoaded ? 'opacity-100' : 'opacity-0'}`}
           style={{ aspectRatio: 'portrait' }}
         >
-          <source src="/lovable-uploads/video1.mp4" type="video/mp4" />
+          {/* Echtes Kampagnen-Footage (aus BlessedStreetsResource, weboptimiert ~0,7 MB) */}
+          <source src="/brand/hero.mp4" type="video/mp4" />
         </video>
         <div className={`absolute inset-0 bg-mono-900 transition-opacity duration-1000 ${isVideoLoaded ? 'opacity-60' : 'opacity-100'}`}></div>
       </div>
@@ -108,16 +110,17 @@ const HomePage = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-4 md:gap-6">
+          {/* Echte Kampagnen-Fotos (BlessedStreetsResource → public/brand, WebP-optimiert) */}
           <div className="md:col-span-6 lg:col-span-8 bg-mono-800 rounded-md overflow-hidden aspect-square md:aspect-[4/3] group">
-            <AnimatedImage src="/lovable-uploads/17f078c8-2f1a-4e2e-8f56-39cc379c263c.png" alt="Blesssed Streets Collection" aspectRatio="auto" className="w-full h-full transition-transform duration-500 group-hover:scale-105" />
+            <AnimatedImage src="/brand/life-01-1600.webp" alt="Blessed Streets Collection" aspectRatio="auto" className="w-full h-full transition-transform duration-500 group-hover:scale-105" />
           </div>
 
           <div className="md:col-span-3 lg:col-span-4 bg-mono-800 rounded-md overflow-hidden group">
-            <AnimatedImage src="/lovable-uploads/aedc4690-8ddc-49e3-a7a6-605988064d17.png" alt="Blesssed Streets Black Hoodie" aspectRatio="portrait" className="w-full h-full transition-transform duration-500 group-hover:scale-105" />
+            <AnimatedImage src="/brand/black-01-1080.webp" alt="Blessed Streets Black Hoodie" aspectRatio="portrait" className="w-full h-full transition-transform duration-500 group-hover:scale-105" />
           </div>
 
           <div className="md:col-span-3 lg:col-span-4 bg-mono-800 rounded-md overflow-hidden group">
-            <AnimatedImage src="/lovable-uploads/68bd47c8-4553-4f02-8047-e01949d85881.png" alt="Blesssed Streets Khaki Hoodie" aspectRatio="portrait" className="w-full h-full transition-transform duration-500 group-hover:scale-105" />
+            <AnimatedImage src="/brand/sage-01-1080.webp" alt="Blessed Streets Khaki Hoodie" aspectRatio="portrait" className="w-full h-full transition-transform duration-500 group-hover:scale-105" />
           </div>
 
           <div className="md:col-span-6 lg:col-span-8 bg-mono-800 rounded-md overflow-hidden">

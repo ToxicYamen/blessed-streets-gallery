@@ -1,41 +1,23 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trash2, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Product } from '@/data/products';
+import { useCart } from '@/context/CartContext';
+import type { CartItem } from '@/lib/store/cart';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/ui/PageHeader';
 
 const Wishlist = () => {
   const navigate = useNavigate();
-  // Mock wishlist data - in a real app, this would come from a state management solution
-  const [wishlistItems, setWishlistItems] = useState<Product[]>([
-    {
-      id: "black-hoodie",
-      name: "Blesssed Streets Logo Hoodie",
-      price: 99.99,
-      description: "Premium black hoodie featuring the iconic Blesssed Streets logo embroidery.",
-      color: "black",
-      images: ["/lovable-uploads/ae0b165b-1ee3-42d3-b7b6-ef45f7449951.png"],
-      sizes: ["M", "L", "XL"],
-      inventory: [
-        { size: "M", quantity: 15 },
-        { size: "L", quantity: 18 },
-        { size: "XL", quantity: 10 }
-      ],
-      featured: true,
-      isNew: true
-    }
-  ]);
+  const { wishlistItems, removeFromWishlist, addToCart } = useCart();
 
-  const removeFromWishlist = (productId: string) => {
-    setWishlistItems(wishlistItems.filter(item => item.id !== productId));
-    toast.success('Item removed from wishlist');
+  const handleRemove = (productId: string) => {
+    removeFromWishlist(productId);
+    toast.success('Artikel wurde von der Wunschliste entfernt');
   };
 
-  const addToCart = (product: Product) => {
-    // In a real app, this would add the item to the cart
-    toast.success(`${product.name} added to cart`);
+  const handleAddToCart = (item: CartItem) => {
+    addToCart({ ...item, quantity: 1 });
+    toast.success(`${item.name} (Größe: ${item.size}) wurde zum Warenkorb hinzugefügt`);
   };
 
   const handleProductClick = (productId: string) => {
@@ -54,9 +36,9 @@ const Wishlist = () => {
         <div className="blesssed-container">
           {wishlistItems.length === 0 ? (
             <div className="text-center py-20">
-              <h2 className="text-2xl mb-4">Your wishlist is empty</h2>
-              <p className="text-mono-400 mb-8">Explore our shop and add items to your wishlist by clicking the heart icon.</p>
-              <Button onClick={() => navigate('/shop')}>Explore Shop</Button>
+              <h2 className="text-2xl mb-4">Deine Wunschliste ist leer</h2>
+              <p className="text-mono-400 mb-8">Entdecke unseren Shop und speichere Artikel über das Herz-Symbol auf deiner Wunschliste.</p>
+              <Button onClick={() => navigate('/shop')}>Zum Shop</Button>
             </div>
           ) : (
             <div className="space-y-8">
@@ -71,12 +53,12 @@ const Wishlist = () => {
                   </thead>
                   <tbody className="divide-y divide-mono-800">
                     {wishlistItems.map(item => (
-                      <tr key={item.id}>
+                      <tr key={`${item.id}-${item.size}`}>
                         <td className="py-6">
                           <div className="flex items-center">
                             <div className="w-20 h-20 mr-4 overflow-hidden rounded-xl">
                               <img
-                                src={item.images[0]}
+                                src={item.image}
                                 alt={item.name}
                                 className="w-full h-full object-cover"
                               />
@@ -89,26 +71,29 @@ const Wishlist = () => {
                               >
                                 {item.name}
                               </button>
-                              <p className="text-mono-400 text-sm mt-1">Color: {item.color}</p>
+                              <p className="text-mono-400 text-sm mt-1">
+                                Größe: {item.size}
+                                {item.color ? ` · Farbe: ${item.color}` : ''}
+                              </p>
                             </div>
                           </div>
                         </td>
-                        <td className="py-6">${item.price.toFixed(2)}</td>
+                        <td className="py-6">{item.price.toFixed(2)} €</td>
                         <td className="py-6">
                           <div className="flex justify-end gap-4">
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => addToCart(item)}
-                              title="Add to cart"
+                              onClick={() => handleAddToCart(item)}
+                              title="In den Warenkorb"
                             >
                               <ShoppingBag size={18} />
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => removeFromWishlist(item.id)}
-                              title="Remove from wishlist"
+                              onClick={() => handleRemove(item.id)}
+                              title="Von der Wunschliste entfernen"
                             >
                               <Trash2 size={18} />
                             </Button>

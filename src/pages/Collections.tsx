@@ -39,8 +39,10 @@ const Collections = () => {
     }
   ]);
 
-  const handleCollectionClick = (collectionId: string) => {
-    navigate(`/collections/${collectionId}`);
+  // Es gibt (noch) keine Collection-Detailseiten — /collections/{id} wäre ein 404.
+  // Bis dahin führen alle Kacheln in den Shop.
+  const handleCollectionClick = (_collectionId: string) => {
+    navigate('/shop');
   };
 
   return (

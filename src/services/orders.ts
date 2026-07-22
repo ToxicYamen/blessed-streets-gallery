@@ -1,8 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { CartItem } from "@/lib/store/cart";
 import { Json } from "@/integrations/supabase/types";
-import { products as localProducts, getProductById } from "@/data/products";
 
 interface CreateOrderParams {
   items: CartItem[];
@@ -11,6 +9,15 @@ interface CreateOrderParams {
   paymentMethod: string;
 }
 
+/**
+ * Legacy "place order without payment" entry point. Used in dev / tests only —
+ * production checkouts go through the Stripe Edge Function path
+ * (`create-checkout-session` → `verify-checkout-session`), which inserts the
+ * order server-side with the service role.
+ *
+ * CartItem.id is the product **slug** (see use-products.ts mapRow), so all
+ * inventory mutations query by `slug`, not by DB id.
+ */
 export const createOrder = async ({ items, total, shippingAddress, paymentMethod }: CreateOrderParams) => {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.user) throw new Error('User must be logged in');
@@ -44,51 +51,30 @@ export const createOrder = async ({ items, total, shippingAddress, paymentMethod
 
   if (orderError) throw orderError;
 
-  // Update product inventory in the database for each item
+  // Update product inventory in the database for each item.
   for (const item of items) {
     try {
-      // First try to get the product from Supabase
-      const { data: supabaseProduct } = await supabase
+      const { data: product } = await supabase
         .from('products')
-        .select('*')
-        .eq('id', item.id)
-        .single();
+        .select('slug, size_quantities')
+        .eq('slug', item.id)
+        .maybeSingle();
 
-      if (supabaseProduct) {
-        // Handle Supabase product inventory update
-        const currentQuantities = supabaseProduct.size_quantities || {};
-        
-        // Create a new object for the updated quantities
-        const newQuantities: Record<string, number> = {};
-        
-        // Copy existing quantities
-        Object.keys(currentQuantities).forEach(size => {
-          newQuantities[size] = currentQuantities[size];
-        });
-        
-        // Update the specific size quantity
-        if (item.size in newQuantities) {
-          newQuantities[item.size] = Math.max(0, newQuantities[item.size] - item.quantity);
-        }
-        
-        // Update the database
-        await supabase
-          .from('products')
-          .update({ size_quantities: newQuantities })
-          .eq('id', item.id);
-      } else {
-        // Handle local product inventory update
-        const localProduct = getProductById(item.id);
-        if (localProduct && localProduct.inventory) {
-          const sizeInventory = localProduct.inventory.find(inv => inv.size === item.size);
-          if (sizeInventory) {
-            sizeInventory.quantity = Math.max(0, sizeInventory.quantity - item.quantity);
-          }
-        }
+      if (!product?.size_quantities) continue;
+
+      const currentQuantities = (product.size_quantities as Record<string, number>) || {};
+      const newQuantities: Record<string, number> = { ...currentQuantities };
+      if (item.size in newQuantities) {
+        newQuantities[item.size] = Math.max(0, newQuantities[item.size] - item.quantity);
       }
+
+      await supabase
+        .from('products')
+        .update({ size_quantities: newQuantities })
+        .eq('slug', item.id);
     } catch (error) {
       console.error('Error updating inventory for product:', item.id, error);
-      // Continue with other items even if this one fails
+      // Continue with other items even if this one fails.
     }
   }
 

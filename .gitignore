@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Rohes Kampagnen-Material (10-170 MB pro Datei) — optimierte Versionen liegen in public/brand
+BlessedStreetsResource/

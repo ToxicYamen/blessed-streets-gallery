@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -8,6 +7,7 @@ import { OrdersList } from '@/components/account/OrdersList';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
 import { useAuth } from '@/hooks/useAuth';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SEOHead } from '@/components/seo/SEOHead';
 
 interface Profile {
   id: string;
@@ -23,65 +23,66 @@ const Account = () => {
   const { user, loading: authLoading, logout } = useAuth(true);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
-  const [fetchAttempted, setFetchAttempted] = useState(false);
+  // Which user id we have already fetched a profile for. This used to be a plain
+  // `fetchAttempted` boolean, which was a one-way latch: if auth ever settled with a
+  // null user first (it did — the old 5s watchdog), the latch flipped to true forever
+  // and the profile was NEVER fetched once the real user arrived, leaving the page
+  // silently blank. Keying on the id makes a late-arriving user re-trigger the fetch.
+  const fetchedForUser = useRef<string | null>(null);
+  const [orderStats, setOrderStats] = useState<{ count: number; total: number }>();
+
+  // Lifted callback so OrdersList can push its stats up to the sidebar without
+  // a second Supabase round-trip in the sidebar itself.
+  const handleOrderStats = useCallback(
+    (stats: { count: number; total: number }) => setOrderStats(stats),
+    [],
+  );
 
   useEffect(() => {
-    let isMounted = true;
+    if (authLoading) return;
 
-    const fetchProfile = async () => {
-      // Only fetch if we have a user and we're mounted
-      if (!user?.id || !isMounted) return;
-      
+    const userId = user?.id;
+    if (!userId) {
+      // Auth settled with no user — useAuth(true) is already redirecting to /auth/login.
+      fetchedForUser.current = null;
+      setProfile(null);
+      setProfileLoading(false);
+      return;
+    }
+
+    if (fetchedForUser.current === userId) return;
+    fetchedForUser.current = userId;
+
+    let isMounted = true;
+    void (async () => {
       try {
         setProfileLoading(true);
-        console.log('Fetching profile for user:', user.id);
-        
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', user.id)
-          .single();
+          .eq('id', userId)
+          .maybeSingle();
 
-        if (error) {
-          console.error('Error fetching profile:', error.message);
-          throw error;
-        }
-        
-        if (isMounted) {
-          console.log('Profile data received:', data);
-          setProfile(data);
-        }
+        if (error) throw error;
+        if (isMounted) setProfile(data);
       } catch (error: any) {
-        console.error('Error loading profile:', error);
         if (isMounted) {
-          toast.error(`Error loading profile: ${error.message}`);
+          // Allow a retry on the next render instead of latching the failure in.
+          fetchedForUser.current = null;
+          toast.error(`Profil konnte nicht geladen werden: ${error.message}`);
         }
       } finally {
-        if (isMounted) {
-          setProfileLoading(false);
-          setFetchAttempted(true);
-        }
+        if (isMounted) setProfileLoading(false);
       }
-    };
-
-    // Only try to fetch profile when auth is done loading and we have a user
-    if (!authLoading && user && !fetchAttempted) {
-      fetchProfile();
-    } else if (!authLoading) {
-      // Auth is done loading but no user
-      setProfileLoading(false);
-      setFetchAttempted(true);
-    }
+    })();
 
     return () => {
       isMounted = false;
     };
-  }, [authLoading, user, fetchAttempted]);
+  }, [authLoading, user?.id]);
 
-  // Force refetch profile function
   const refetchProfile = async () => {
     if (!user?.id) return;
-    
     setProfileLoading(true);
     try {
       const { data, error } = await supabase
@@ -89,49 +90,71 @@ const Account = () => {
         .select('*')
         .eq('id', user.id)
         .single();
-      
       if (error) throw error;
-      
       setProfile(data);
     } catch (error: any) {
-      console.error('Error refetching profile:', error);
-      toast.error(`Error refetching profile: ${error.message}`);
+      toast.error(`Profil konnte nicht aktualisiert werden: ${error.message}`);
     } finally {
       setProfileLoading(false);
     }
   };
 
-  // Show loading state while checking authentication
   if (authLoading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
-        <span className="ml-3">Loading authentication...</span>
+      <div>
+        <PageHeader title="Mein Konto" description="Verwalte dein Profil und deine Bestellungen." />
+        <div className="blesssed-container py-12">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr,360px] gap-10">
+            <div className="space-y-6">
+              <Skeleton className="h-48 w-full" />
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-72 w-full" />
+            </div>
+            <div className="space-y-6">
+              <Skeleton className="h-40 w-full" />
+              <Skeleton className="h-40 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
-      <PageHeader
-        title="Account"
-        description="Manage your account settings and view your orders"
+    <div className="relative">
+      <SEOHead
+        title="Mein Konto"
+        description="Verwalte dein Profil und deine Bestellungen."
+        canonicalPath="/account"
+        noIndex
       />
-      
-      <div className="blesssed-container py-12">
-        <div className="grid grid-cols-1 md:grid-cols-[1fr,400px] gap-8">
-          {/* Profile and Orders Sections */}
-          <div className="space-y-6">
-            <ProfileSection 
-              profile={profile} 
-              loading={profileLoading} 
-              onProfileUpdated={refetchProfile} 
+
+      <PageHeader
+        title="Mein Konto"
+        description="Profil, Bestellungen und Sendungsverfolgung — alles an einem Ort."
+      />
+
+      {/* Decorative grid backdrop — editorial atmosphere */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-[420px] opacity-[0.04] bg-[linear-gradient(to_right,theme(colors.mono.100)_1px,transparent_1px),linear-gradient(to_bottom,theme(colors.mono.100)_1px,transparent_1px)] [background-size:48px_48px]"
+      />
+
+      <div className="blesssed-container py-12 md:py-16 relative">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr,360px] gap-10 lg:gap-12">
+          {/* Main column */}
+          <div className="space-y-12 min-w-0">
+            <ProfileSection
+              profile={profile}
+              loading={profileLoading}
+              onProfileUpdated={refetchProfile}
             />
-            {user && <OrdersList userId={user.id} />}
+            {user && <OrdersList userId={user.id} onStats={handleOrderStats} />}
           </div>
 
           {/* Sidebar */}
-          <AccountSidebar onLogout={logout} />
+          <AccountSidebar onLogout={logout} stats={orderStats} />
         </div>
       </div>
     </div>

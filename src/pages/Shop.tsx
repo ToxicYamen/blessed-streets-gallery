@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getAllProducts } from '@/data/products';
+import { useProducts } from '@/hooks/use-products';
 import ProductGrid from '@/components/product/ProductGrid';
 import { PageHeader } from '@/components/ui/PageHeader';
 
@@ -8,7 +8,7 @@ const Shop = () => {
   const [selectedSize, setSelectedSize] = useState<string>('all');
   const [selectedColor, setSelectedColor] = useState<string>('all');
 
-  const allProducts = getAllProducts();
+  const { data: allProducts = [], isLoading } = useProducts();
 
   // Filter products based on selected filters
   const filteredProducts = allProducts.filter(product => {
@@ -135,7 +135,11 @@ const Shop = () => {
 
             {/* Products */}
             <div className="flex-1">
-              {filteredProducts.length === 0 ? (
+              {isLoading ? (
+                <div className="p-8 text-center">
+                  <p className="text-mono-400">Produkte werden geladen…</p>
+                </div>
+              ) : filteredProducts.length === 0 ? (
                 <div className="p-8 text-center">
                   <h3 className="text-xl mb-2">No products found</h3>
                   <p className="text-mono-400">Try adjusting your filters to find products.</p>

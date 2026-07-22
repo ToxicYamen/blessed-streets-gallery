@@ -9,7 +9,6 @@ import { pageTransition } from '@/lib/transitions';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { getProductById } from '@/data/products';
 
 const Cart = () => {
   const { cartItems, updateCartItemQuantity, removeFromCart } = useCart();
@@ -22,45 +21,32 @@ const Cart = () => {
     const fetchStockInfo = async () => {
       setIsLoading(true);
       try {
-        const productIds = [...new Set(cartItems.map(item => item.id))];
+        // Cart-Item-IDs sind Produkt-SLUGS ('black-hoodie', …) — Lookup daher über slug.
+        const productSlugs = [...new Set(cartItems.map(item => item.id))];
         const limits: Record<string, Record<string, number>> = {};
-        
-        // Try to get products from Supabase
+
         const { data: supabaseProducts, error } = await supabase
           .from('products')
-          .select('id, size_quantities')
-          .in('id', productIds);
-        
+          .select('slug, size_quantities')
+          .in('slug', productSlugs);
+
         if (error) {
           console.error('Error fetching products from Supabase:', error);
         }
-        
+
         // Process Supabase products
         if (supabaseProducts && supabaseProducts.length > 0) {
           supabaseProducts.forEach(product => {
             if (product.size_quantities) {
-              limits[product.id] = {};
+              limits[product.slug] = {};
               // Ensure size_quantities is treated as Record<string, number>
               Object.entries(product.size_quantities as Record<string, number>).forEach(([size, qty]) => {
-                limits[product.id][size] = qty;
+                limits[product.slug][size] = qty;
               });
             }
           });
         }
-        
-        // Process local products for any that weren't found in Supabase
-        productIds.forEach(id => {
-          if (!limits[id]) {
-            const localProduct = getProductById(id);
-            if (localProduct && localProduct.inventory) {
-              limits[id] = {};
-              localProduct.inventory.forEach(inv => {
-                limits[id][inv.size] = inv.quantity;
-              });
-            }
-          }
-        });
-        
+
         setStockLimits(limits);
       } catch (err) {
         console.error('Error in fetchStockInfo:', err);
@@ -173,7 +159,7 @@ const Cart = () => {
                   return (
                     <div key={`${item.id}-${item.size}`} className="flex gap-6 p-4 bg-accent/5 rounded-lg">
                       <img
-                        src={item.image || (item.images && item.images[0])}
+                        src={item.image}
                         alt={item.name}
                         className="w-24 h-24 object-cover rounded-md"
                       />

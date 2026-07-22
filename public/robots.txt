@@ -1,14 +1,71 @@
+# Blessed Streets — Search engine + AI crawler access
+# All major crawlers (incl. AI) are explicitly welcomed.
+
+# Traditional search
 User-agent: Googlebot
 Allow: /
-
 User-agent: Bingbot
 Allow: /
+User-agent: DuckDuckBot
+Allow: /
+User-agent: Slurp
+Allow: /
 
+# Social previews
 User-agent: Twitterbot
 Allow: /
-
 User-agent: facebookexternalhit
 Allow: /
+User-agent: LinkedInBot
+Allow: /
+User-agent: Pinterestbot
+Allow: /
 
+# AI search engines (GEO — Generative Engine Optimization)
+User-agent: GPTBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: anthropic-ai
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: Claude-Web
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: Perplexity-User
+Allow: /
+User-agent: Google-Extended
+Allow: /
+User-agent: Applebot
+Allow: /
+User-agent: Applebot-Extended
+Allow: /
+User-agent: cohere-ai
+Allow: /
+User-agent: Meta-ExternalAgent
+Allow: /
+User-agent: Meta-ExternalFetcher
+Allow: /
+User-agent: CCBot
+Allow: /
+User-agent: Bytespider
+Allow: /
+User-agent: Diffbot
+Allow: /
+User-agent: YouBot
+Allow: /
+
+# Default — allow all, block private / non-indexable areas
 User-agent: *
 Allow: /
+Disallow: /account
+Disallow: /cart
+Disallow: /checkout
+Disallow: /wishlist
+Disallow: /auth/
+
+Sitemap: https://blessedstreets.de/sitemap.xml

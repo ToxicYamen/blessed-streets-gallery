@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import ProductGrid from '../components/product/ProductGrid';
 import AnimatedImage from '../components/ui/AnimatedImage';
 import { ShoppingBag, Heart, ChevronLeft, Minus, Plus, X, ArrowLeft, ArrowRight } from 'lucide-react';
@@ -32,39 +31,14 @@ import { toast } from 'sonner';
 import { useCart } from '@/context/CartContext';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
-import { Json } from '@/integrations/supabase/types';
-import { getProductById as getLocalProductById } from '@/data/products';
-
-interface ProductInventory {
-  size: string;
-  quantity: number;
-}
-
-// Updated Product interface to match what we're getting from both data sources
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  description: string | null;
-  color: string | null;
-  images: string[] | null;
-  size?: string[] | null;
-  sizes?: string[]; // From data/products.ts
-  size_quantities?: Record<string, number> | null;
-  is_featured?: boolean | null;
-  is_new?: boolean | null;
-  featured?: boolean; // From data/products.ts
-  isNew?: boolean; // From data/products.ts
-  isSale?: boolean;
-  salePrice?: number;
-  inventory?: ProductInventory[];
-}
+import { useProductBySlug, useRelatedProducts } from '@/hooks/use-products';
+import { SHOP_CONFIG } from '@/lib/shop-config';
 
 const ProductDetail = () => {
+  // Der Routen-Param ist der Produkt-Slug (z. B. 'black-hoodie').
   const { id } = useParams<{ id: string }>();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const { data: product, isLoading: loading } = useProductBySlug(id);
+  const { data: relatedProducts = [] } = useRelatedProducts(id);
   const navigate = useNavigate();
 
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
@@ -74,111 +48,6 @@ const ProductDetail = () => {
   const [isHeartAnimating, setIsHeartAnimating] = useState(false);
 
   const { addToCart, addToWishlist } = useCart();
-
-  useEffect(() => {
-    const fetchProduct = async () => {
-      if (!id) return;
-      
-      try {
-        setLoading(true);
-        
-        // First try to get from Supabase
-        const { data: productData, error } = await supabase
-          .from('products')
-          .select('*')
-          .eq('id', id)
-          .single();
-        
-        // If not found in Supabase or there was an error, try local data
-        if (error || !productData) {
-          console.log('Product not found in Supabase, trying local data');
-          const localProduct = getLocalProductById(id);
-          
-          if (localProduct) {
-            // Map local product to match our expected format
-            const mappedLocalProduct: Product = {
-              ...localProduct,
-              description: localProduct.description || null,
-              color: localProduct.color || null,
-              images: localProduct.images || null,
-              size: localProduct.sizes,
-              size_quantities: localProduct.inventory ? 
-                localProduct.inventory.reduce((acc: Record<string, number>, item) => {
-                  acc[item.size] = item.quantity;
-                  return acc;
-                }, {}) : null,
-              is_featured: localProduct.featured || null,
-              is_new: localProduct.isNew || null
-            };
-            
-            setProduct(mappedLocalProduct);
-            
-            // Set related products as other local products
-            const localRelatedProducts = Object.values(require('@/data/products').products)
-              .filter((p: any) => p.id !== id)
-              .slice(0, 4)
-              .map((p: any) => ({
-                ...p,
-                description: p.description || null,
-                color: p.color || null,
-                images: p.images || null,
-                size: p.sizes,
-                size_quantities: p.inventory ? 
-                  p.inventory.reduce((acc: Record<string, number>, item: any) => {
-                    acc[item.size] = item.quantity;
-                    return acc;
-                  }, {}) : null,
-                is_featured: p.featured || null,
-                is_new: p.isNew || null
-              }));
-              
-            setRelatedProducts(localRelatedProducts);
-            return;
-          }
-        } else {
-          // Process Supabase data
-          const processedProduct: Product = {
-            ...productData,
-            // Ensure size_quantities is a Record<string, number>
-            size_quantities: productData.size_quantities ? 
-              (typeof productData.size_quantities === 'string' 
-                ? JSON.parse(productData.size_quantities) 
-                : productData.size_quantities as Record<string, number>)
-              : null
-          };
-          
-          setProduct(processedProduct);
-          
-          // Fetch related products
-          const { data: relatedData, error: relatedError } = await supabase
-            .from('products')
-            .select('*')
-            .neq('id', id)
-            .limit(4);
-  
-          if (!relatedError && relatedData) {
-            // Process related products
-            const processedRelated = relatedData.map(item => ({
-              ...item,
-              size_quantities: item.size_quantities ? 
-                (typeof item.size_quantities === 'string' 
-                  ? JSON.parse(item.size_quantities) 
-                  : item.size_quantities as Record<string, number>)
-                : null
-            }));
-            setRelatedProducts(processedRelated);
-          }
-        }
-      } catch (error: any) {
-        console.error('Error fetching product:', error);
-        toast.error('Failed to load product details');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProduct();
-  }, [id]);
 
   // Reset selected size when product changes
   useEffect(() => {
@@ -252,10 +121,10 @@ const ProductDetail = () => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!(e.target instanceof HTMLButtonElement)) {
-      return;
-    }
-
+    // NOTE: no `e.target instanceof HTMLButtonElement` guard here. The button
+    // contains an <svg> icon and a <span>; clicking either makes e.target that
+    // child, not the button, and the old guard then silently aborted — that was
+    // the "add to cart does nothing" bug.
     if (!selectedSize) {
       toast.error('Bitte wähle eine Größe aus');
       return;
@@ -469,7 +338,9 @@ const ProductDetail = () => {
             <h1 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">{product.name}</h1>
             <p className="text-muted-foreground capitalize mb-6">{product.color || 'Default'}</p>
 
-            <p className="text-xl font-medium mb-6 text-foreground">€{product.price}</p>
+            <p className="text-xl font-medium mb-1 text-foreground">€{product.price}</p>
+            {/* PAngV-Pflichthinweis (Preisangabenverordnung) */}
+            <p className="text-xs text-muted-foreground mb-6">{SHOP_CONFIG.vatNotice}</p>
 
             {/* Low Stock Warning */}
             {selectedSize && (
@@ -653,13 +524,13 @@ const ProductDetail = () => {
                       <span className="text-muted-foreground">Versandzeit</span>
                       <span className="text-foreground">2-4 Werktage</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">Versandkosten</span>
-                      <span className="text-foreground">Kostenloser Versand</span>
+                    <div className="flex justify-between items-center gap-4">
+                      <span className="text-muted-foreground shrink-0">Versandkosten</span>
+                      <span className="text-foreground text-right">Versand: DE 4,99 € (frei ab 50 €) · AT 7,99 € · CH 12,99 €</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Lieferung</span>
-                      <span className="text-foreground">DHL, Hermes</span>
+                      <span className="text-foreground">{SHOP_CONFIG.carrier}</span>
                     </div>
                   </div>
                 </AccordionContent>

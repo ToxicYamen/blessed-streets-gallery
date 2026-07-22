@@ -1,10 +1,12 @@
 
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { SEOHead } from '@/components/seo/SEOHead';
 
 const NotFound = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 animate-fade-in">
+      <SEOHead title="Seite nicht gefunden" description="404 — Die gesuchte Seite existiert nicht." noIndex />
       <div className="max-w-md w-full text-center">
         <h1 className="text-[120px] font-bold leading-none mb-2">404</h1>
         <p className="text-xl text-mono-400 mb-12">The page you're looking for doesn't exist.</p>

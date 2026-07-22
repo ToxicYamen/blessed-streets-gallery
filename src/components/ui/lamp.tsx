@@ -13,7 +13,7 @@ export const LampContainer = ({
     return (
         <div
             className={cn(
-                "relative flex min-h-[40vh] flex-col items-center justify-center overflow-hidden bg-white dark:bg-black w-full rounded-md z-0 mb-12 transition-colors duration-300",
+                "relative flex min-h-[40vh] flex-col items-center justify-center overflow-hidden bg-card w-full rounded-md z-0 mb-12 transition-colors duration-300",
                 className
             )}
         >
@@ -31,8 +31,8 @@ export const LampContainer = ({
                     }}
                     className="absolute inset-auto right-1/2 h-56 overflow-visible w-[30rem] bg-gradient-conic from-[#455B57] via-transparent to-transparent text-white [--conic-position:from_70deg_at_center_top]"
                 >
-                    <div className="absolute w-[100%] left-0 bg-white dark:bg-black h-40 bottom-0 z-20 [mask-image:linear-gradient(to_top,white,transparent)] transition-colors duration-300" />
-                    <div className="absolute w-40 h-[100%] left-0 bg-white dark:bg-black bottom-0 z-20 [mask-image:linear-gradient(to_right,white,transparent)] transition-colors duration-300" />
+                    <div className="absolute w-[100%] left-0 bg-card h-40 bottom-0 z-20 [mask-image:linear-gradient(to_top,white,transparent)] transition-colors duration-300" />
+                    <div className="absolute w-40 h-[100%] left-0 bg-card bottom-0 z-20 [mask-image:linear-gradient(to_right,white,transparent)] transition-colors duration-300" />
                 </motion.div>
                 <motion.div
                     initial={{ opacity: 0.5, width: "15rem" }}
@@ -47,10 +47,10 @@ export const LampContainer = ({
                     }}
                     className="absolute inset-auto left-1/2 h-56 w-[30rem] bg-gradient-conic from-transparent via-transparent to-[#455B57] text-white [--conic-position:from_290deg_at_center_top]"
                 >
-                    <div className="absolute w-40 h-[100%] right-0 bg-white dark:bg-black bottom-0 z-20 [mask-image:linear-gradient(to_left,white,transparent)] transition-colors duration-300" />
-                    <div className="absolute w-[100%] right-0 bg-white dark:bg-black h-40 bottom-0 z-20 [mask-image:linear-gradient(to_top,white,transparent)] transition-colors duration-300" />
+                    <div className="absolute w-40 h-[100%] right-0 bg-card bottom-0 z-20 [mask-image:linear-gradient(to_left,white,transparent)] transition-colors duration-300" />
+                    <div className="absolute w-[100%] right-0 bg-card h-40 bottom-0 z-20 [mask-image:linear-gradient(to_top,white,transparent)] transition-colors duration-300" />
                 </motion.div>
-                <div className="absolute top-1/2 h-48 w-full translate-y-12 scale-x-150 bg-white dark:bg-black blur-2xl transition-colors duration-300"></div>
+                <div className="absolute top-1/2 h-48 w-full translate-y-12 scale-x-150 bg-card blur-2xl transition-colors duration-300"></div>
                 <div className="absolute top-1/2 z-50 h-48 w-full bg-transparent opacity-10 backdrop-blur-md"></div>
                 <div className="absolute inset-auto z-50 h-36 w-[28rem] -translate-y-1/2 rounded-full bg-[#455B57] opacity-50 blur-3xl"></div>
                 <motion.div
@@ -74,7 +74,7 @@ export const LampContainer = ({
                     className="absolute inset-auto z-50 h-0.5 w-[30rem] -translate-y-[7rem] bg-[#455B57]"
                 ></motion.div>
 
-                <div className="absolute inset-auto z-40 h-44 w-full -translate-y-[12.5rem] bg-white dark:bg-black transition-colors duration-300"></div>
+                <div className="absolute inset-auto z-40 h-44 w-full -translate-y-[12.5rem] bg-card transition-colors duration-300"></div>
             </div>
 
             <div className="relative z-50 flex -translate-y-32 flex-col items-center px-5">

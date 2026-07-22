@@ -7,7 +7,7 @@ import path from "path";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: 8081,
     allowedHosts: ["aa3caf6d-8457-43c5-9073-7a1001aa4e18.lovableproject.com", "localhost"]
   },
   plugins: [
