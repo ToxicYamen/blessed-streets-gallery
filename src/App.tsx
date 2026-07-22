@@ -11,6 +11,8 @@ import { Suspense, lazy, useEffect, useRef } from "react";
 import { pageTransition } from "@/lib/transitions";
 import { CartProvider } from '@/context/CartContext';
 import { BackgroundGrid } from "@/components/ui/background-grid";
+import CookieConsent from "@/components/CookieConsent";
+import ComingSoonGate from "@/components/ComingSoonGate";
 import './i18n/config';
 
 // The landing page is eager so the first paint never shows a loading fallback.
@@ -173,6 +175,10 @@ const App = () => (
               <Toaster />
               <Sonner />
               <AppContent />
+              {/* Info-Banner zu technisch notwendigen Cookies — global, außerhalb der Routes */}
+              <CookieConsent />
+              {/* Coming-Soon-Gate: deckt bei VITE_COMING_SOON=true die ganze App ab (z-[100]) */}
+              <ComingSoonGate />
             </CartProvider>
           </TooltipProvider>
         </ThemeProvider>
