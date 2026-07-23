@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_config: {
+        Row: {
+          key: string
+          updated_at: string | null
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string | null
+          value: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string | null
+          value?: string
+        }
+        Relationships: []
+      }
       collections: {
         Row: {
           created_at: string | null
@@ -38,6 +56,27 @@ export type Database = {
           image?: string | null
           name?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      launch_signups: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          source?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          source?: string
         }
         Relationships: []
       }
@@ -94,6 +133,7 @@ export type Database = {
           color: string | null
           created_at: string | null
           currency: string | null
+          customer_email: string | null
           estimated_delivery: string | null
           id: string
           items: Json
@@ -107,12 +147,13 @@ export type Database = {
           total: number
           tracking_number: string | null
           updated_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           color?: string | null
           created_at?: string | null
           currency?: string | null
+          customer_email?: string | null
           estimated_delivery?: string | null
           id?: string
           items?: Json
@@ -126,12 +167,13 @@ export type Database = {
           total?: number
           tracking_number?: string | null
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           color?: string | null
           created_at?: string | null
           currency?: string | null
+          customer_email?: string | null
           estimated_delivery?: string | null
           id?: string
           items?: Json
@@ -145,7 +187,7 @@ export type Database = {
           total?: number
           tracking_number?: string | null
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -469,7 +511,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      decrement_stock: {
+        Args: { p_qty: number; p_size: string; p_slug: string }
+        Returns: boolean
+      }
       is_admin: { Args: never; Returns: boolean }
+      restock_stock: {
+        Args: { p_qty: number; p_size: string; p_slug: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Home -->
   <url>
     <loc>https://blessedstreets.de/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="de" href="https://blessedstreets.de/"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://blessedstreets.de/"/>
   </url>
+
+  <!-- Shop -->
   <url>
     <loc>https://blessedstreets.de/shop</loc>
     <changefreq>weekly</changefreq>
@@ -18,6 +18,8 @@
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Produkte (Slugs aus Supabase) -->
   <url>
     <loc>https://blessedstreets.de/product/black-hoodie</loc>
     <changefreq>weekly</changefreq>
@@ -28,6 +30,8 @@
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
+
+  <!-- Inhalte -->
   <url>
     <loc>https://blessedstreets.de/collections</loc>
     <changefreq>monthly</changefreq>
@@ -43,6 +47,8 @@
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
+
+  <!-- Service -->
   <url>
     <loc>https://blessedstreets.de/support</loc>
     <changefreq>monthly</changefreq>
@@ -56,11 +62,33 @@
   <url>
     <loc>https://blessedstreets.de/shipping</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://blessedstreets.de/returns</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- Rechtsseiten -->
+  <url>
+    <loc>https://blessedstreets.de/impressum</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://blessedstreets.de/datenschutz</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://blessedstreets.de/agb</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://blessedstreets.de/widerruf</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
   </url>
 </urlset>
