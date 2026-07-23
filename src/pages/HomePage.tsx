@@ -10,6 +10,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { SparklesCore } from "@/components/ui/sparkles";
+import SplitText from '@/components/SplitText';
+import SpotlightCard from '@/components/SpotlightCard';
+import Noise from '@/components/Noise';
+import CampaignSection from '@/components/home/CampaignSection';
+import GridScanBackdrop from '@/components/home/GridScanBackdrop';
+import usePrefersReducedMotion from '@/components/home/usePrefersReducedMotion';
 
 const HomePage = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -22,6 +28,7 @@ const HomePage = () => {
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const { t } = useTranslation();
+  const reducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     setIsVisible(true);
@@ -59,7 +66,9 @@ const HomePage = () => {
     }
   }, []);
 
-  return <div className="min-h-screen bg-mono-50 dark:bg-mono-950">
+  // Kein opaker Hintergrund — das globale Marken-Raster (BackgroundGrid)
+  // soll durchscheinen; Schwarz kommt vom body.
+  return <div className="min-h-screen">
     {/* Hero Section */}
     <section ref={heroRef} className="min-h-screen flex flex-col justify-center relative overflow-hidden">
       <div className="absolute inset-0 z-0">
@@ -77,13 +86,34 @@ const HomePage = () => {
           <source src="/brand/hero.mp4" type="video/mp4" />
         </video>
         <div className={`absolute inset-0 bg-mono-900 transition-opacity duration-1000 ${isVideoLoaded ? 'opacity-60' : 'opacity-100'}`}></div>
+        {/* Dezentes Filmkorn (Opacity ~0.05), entfällt bei reduzierter Bewegung */}
+        {!reducedMotion && (
+          <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+            <Noise patternAlpha={12} patternRefreshInterval={3} />
+          </div>
+        )}
       </div>
 
       <div className="blesssed-container relative z-10 mt-24">
         <div className="max-w-2xl">
-          <h1 className={`text-oversized mb-6 text-white transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
-            Blessed Streets
-          </h1>
+          {reducedMotion ? (
+            <h1 className="text-oversized mb-6 text-white">Blessed Streets</h1>
+          ) : (
+            <SplitText
+              text="Blessed Streets"
+              tag="h1"
+              className="text-oversized mb-6 text-white"
+              textAlign="left"
+              splitType="chars"
+              delay={20}
+              duration={0.5}
+              ease="power3.out"
+              from={{ opacity: 0, y: 24 }}
+              to={{ opacity: 1, y: 0 }}
+              threshold={0.2}
+              rootMargin="0px"
+            />
+          )}
           <p className={`text-mono-300 text-lg mb-8 max-w-lg transition-all duration-1000 delay-300 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
             {t('home.heroSubtitle')}
           </p>
@@ -101,7 +131,7 @@ const HomePage = () => {
       <div className="blesssed-container">
         {/* Mobile Version - Simple Text */}
         <div className="block md:hidden text-center mb-8">
-          <h2 className="text-3xl font-bold">FEATURED COLLECTION</h2>
+          <h2 className="text-3xl font-bold text-black dark:text-white">{t('home.featuredCollection')}</h2>
         </div>
 
         {/* Lamp Section - Only visible in dark mode on larger screens */}
@@ -111,36 +141,54 @@ const HomePage = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-4 md:gap-6">
           {/* Echte Kampagnen-Fotos (BlessedStreetsResource → public/brand, WebP-optimiert) */}
-          <div className="md:col-span-6 lg:col-span-8 bg-mono-800 rounded-md overflow-hidden aspect-square md:aspect-[4/3] group">
-            <AnimatedImage src="/brand/life-01-1600.webp" alt="Blessed Streets Collection" aspectRatio="auto" className="w-full h-full transition-transform duration-500 group-hover:scale-105" />
-          </div>
+          <SpotlightCard
+            spotlightColor="rgba(255, 255, 255, 0.12)"
+            className="group !p-0 !rounded-md md:col-span-6 lg:col-span-8 aspect-square md:aspect-[4/3]"
+          >
+            <AnimatedImage src="/brand/life-01-1600.webp" alt="Blessed Streets Kollektion — urbane Streetwear-Szene" aspectRatio="auto" className="w-full h-full !rounded-none transition-transform duration-300 group-hover:scale-105" />
+          </SpotlightCard>
 
-          <div className="md:col-span-3 lg:col-span-4 bg-mono-800 rounded-md overflow-hidden group">
-            <AnimatedImage src="/brand/black-01-1080.webp" alt="Blessed Streets Black Hoodie" aspectRatio="portrait" className="w-full h-full transition-transform duration-500 group-hover:scale-105" />
-          </div>
+          <SpotlightCard
+            spotlightColor="rgba(255, 255, 255, 0.12)"
+            className="group !p-0 !rounded-md md:col-span-3 lg:col-span-4"
+          >
+            <AnimatedImage src="/brand/black-01-1080.webp" alt="Blessed Streets Hoodie in Schwarz" aspectRatio="portrait" className="w-full h-full !rounded-none transition-transform duration-300 group-hover:scale-105" />
+          </SpotlightCard>
 
-          <div className="md:col-span-3 lg:col-span-4 bg-mono-800 rounded-md overflow-hidden group">
-            <AnimatedImage src="/brand/sage-01-1080.webp" alt="Blessed Streets Khaki Hoodie" aspectRatio="portrait" className="w-full h-full transition-transform duration-500 group-hover:scale-105" />
-          </div>
+          <SpotlightCard
+            spotlightColor="rgba(255, 255, 255, 0.12)"
+            className="group !p-0 !rounded-md md:col-span-3 lg:col-span-4"
+          >
+            <AnimatedImage src="/brand/sage-01-1080.webp" alt="Blessed Streets Hoodie in Salbeigrün" aspectRatio="portrait" className="w-full h-full !rounded-none transition-transform duration-300 group-hover:scale-105" />
+          </SpotlightCard>
 
-          <div className="md:col-span-6 lg:col-span-8 bg-mono-800 rounded-md overflow-hidden">
-            <div className="h-full flex flex-col justify-center p-8 md:p-12 bg-[#455b57]">
-              <h3 className="text-3xl md:text-4xl font-bold mb-4 text-slate-50">BLESSSED STREETS Est. 2022</h3>
-              <p className="mb-6 text-slate-50">Premium streetwear for those who appreciate quality, minimalism, and urban style.</p>
-              <Link to="/about" className="inline-flex items-center border border-mono-400 text-mono-100 px-6 py-2 text-sm">
-                Learn More
+          <SpotlightCard
+            spotlightColor="rgba(255, 255, 255, 0.12)"
+            className="!p-0 !rounded-md md:col-span-6 lg:col-span-8"
+          >
+            <div className="h-full flex flex-col justify-center p-8 md:p-12">
+              <h3 className="text-3xl md:text-4xl font-bold mb-4 text-white">{t('home.aboutSection.title')}</h3>
+              <p className="mb-6 text-mono-300">{t('home.aboutSection.description')}</p>
+              <Link
+                to="/about"
+                className="inline-flex items-center self-start min-h-[44px] cursor-pointer border border-mono-400 text-white px-6 py-2 text-sm transition-colors duration-200 hover:bg-white hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              >
+                {t('home.aboutSection.learnMore')}
               </Link>
             </div>
-          </div>
+          </SpotlightCard>
         </div>
       </div>
     </section>
+
+    {/* Editoriale Kampagnen-Sektion (Tunnel-Motiv, ScrollReveal-Claim) */}
+    <CampaignSection />
 
     {/* New Arrivals Section */}
     <section className="py-24 bg-mono-950">
       <div className="blesssed-container">
         <div className="flex justify-between items-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white">
+          <h2 className="text-2xl md:text-3xl font-bold text-white">
             {t('home.newArrivals')}
           </h2>
           <Button variant="outline" asChild>
@@ -155,17 +203,17 @@ const HomePage = () => {
       </div>
     </section>
 
-    {/* Sparkles Section */}
-    <div className="h-[40rem] w-full bg-[#455B57] dark:bg-black flex flex-col items-center justify-center overflow-hidden">
-      <h1 className="md:text-7xl text-3xl lg:text-9xl font-bold text-center text-white relative z-20">
+    {/* Sparkles Section — monochrom (Marken-DNA: nur Graustufen) */}
+    <div className="h-[40rem] w-full bg-black flex flex-col items-center justify-center overflow-hidden">
+      <h1 className="md:text-7xl text-3xl lg:text-9xl font-bold font-display text-center text-white relative z-20">
         Blessed Streets
       </h1>
-      <div className="w-[40rem] h-40 relative">
+      <div className="w-[40rem] max-w-full h-40 relative">
         {/* Gradients */}
-        <div className="absolute inset-x-20 top-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent h-[2px] w-3/4 blur-sm" />
-        <div className="absolute inset-x-20 top-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent h-px w-3/4" />
-        <div className="absolute inset-x-60 top-0 bg-gradient-to-r from-transparent via-sky-500 to-transparent h-[5px] w-1/4 blur-sm" />
-        <div className="absolute inset-x-60 top-0 bg-gradient-to-r from-transparent via-sky-500 to-transparent h-px w-1/4" />
+        <div className="absolute inset-x-20 top-0 bg-gradient-to-r from-transparent via-mono-400 to-transparent h-[2px] w-3/4 blur-sm" />
+        <div className="absolute inset-x-20 top-0 bg-gradient-to-r from-transparent via-mono-400 to-transparent h-px w-3/4" />
+        <div className="absolute inset-x-60 top-0 bg-gradient-to-r from-transparent via-white to-transparent h-[5px] w-1/4 blur-sm" />
+        <div className="absolute inset-x-60 top-0 bg-gradient-to-r from-transparent via-white to-transparent h-px w-1/4" />
 
         {/* Core component */}
         <SparklesCore
@@ -178,19 +226,20 @@ const HomePage = () => {
         />
 
         {/* Radial Gradient to prevent sharp edges */}
-        <div className="absolute inset-0 w-full h-full bg-[#455B57] dark:bg-black [mask-image:radial-gradient(350px_200px_at_top,transparent_20%,white)]"></div>
+        <div className="absolute inset-0 w-full h-full bg-black [mask-image:radial-gradient(350px_200px_at_top,transparent_20%,white)]"></div>
       </div>
     </div>
 
-    {/* Newsletter Section */}
-    <section className="py-24 border-t border-mono-800 dark:border-mono-800">
-      <div className="blesssed-container">
+    {/* Newsletter Section — GridScan-Backdrop (einzige WebGL-Zutat der Seite) */}
+    <section className="relative py-24 overflow-hidden bg-black border-t border-mono-800">
+      <GridScanBackdrop />
+      <div className="blesssed-container relative z-10">
         <div className="max-w-2xl mx-auto">
           <div className="flex flex-col items-center gap-6 text-center">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-black dark:text-white">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
               {t('home.newsletter.title')}
             </h2>
-            <p className="text-mono-600 dark:text-mono-400 text-center max-w-lg">
+            <p className="text-mono-300 text-center max-w-lg">
               {t('home.newsletter.subtitle')}
             </p>
             <div className="w-full max-w-md space-y-4">
@@ -202,24 +251,24 @@ const HomePage = () => {
                       id="newsletter"
                       name="newsletter"
                       placeholder=""
-                      className="w-full pl-4 pr-32 py-6 bg-white/5 border-white/10 text-white placeholder:text-white/50 rounded-full peer"
+                      className="w-full !h-14 pl-4 pr-32 bg-white/5 border-white/10 text-white placeholder:text-white/50 rounded-full peer focus-visible:ring-2 focus-visible:ring-white/70"
                     />
                     <label
                       htmlFor="newsletter"
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-mono-500 dark:text-mono-400 transition-all duration-200 peer-focus:-translate-y-9 peer-focus:text-xs peer-focus:text-black dark:peer-focus:text-white peer-[:not(:placeholder-shown)]:-translate-y-9 peer-[:not(:placeholder-shown)]:text-xs"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-mono-400 transition-all duration-200 peer-focus:-translate-y-9 peer-focus:text-xs peer-focus:text-white peer-[:not(:placeholder-shown)]:-translate-y-9 peer-[:not(:placeholder-shown)]:text-xs"
                     >
                       {t('home.newsletter.placeholder')}
                     </label>
                     <button
                       type="submit"
-                      className="absolute right-1 top-[50%] -translate-y-1/2 px-6 py-2 bg-black text-white dark:bg-white dark:text-black rounded-full"
+                      className="absolute right-1.5 top-[50%] -translate-y-1/2 h-11 px-6 bg-white text-black rounded-full cursor-pointer transition-colors duration-200 hover:bg-mono-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                     >
                       {t('home.newsletter.button')}
                     </button>
                   </div>
                 </div>
               </form>
-              <p className="text-xs text-mono-600 dark:text-mono-400 max-w-md mx-auto">
+              <p className="text-xs text-mono-400 max-w-md mx-auto">
                 {t('home.newsletter.terms')}
               </p>
             </div>

@@ -4,7 +4,6 @@ import { Menu, X, ShoppingBag, Heart, User, Search, ChevronDown } from 'lucide-r
 import ReactCountryFlag from "react-country-flag";
 import { useTranslation } from 'react-i18next';
 import { SearchInput } from '@/components/ui/search-input';
-import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
 import { cartIconAnimation, pageTransition } from '@/lib/transitions';
@@ -221,8 +220,6 @@ export const Header = () => {
           </nav>
 
           <div className="flex items-center space-x-4">
-            <ThemeToggle />
-
             <div className="relative hidden lg:block" ref={countryRef}>
               <Button
                 variant="ghost"
@@ -330,9 +327,12 @@ export const Header = () => {
               )}
             </div>
 
+            {/* Ein einziges button-Element — verschachtelte Buttons sind
+                ungültiges HTML (validateDOMNesting-Warnung). */}
             <button
               onClick={handleUserClick}
-              className="hidden md:block"
+              aria-label="Konto"
+              className="hidden md:inline-flex h-10 w-10 items-center justify-center rounded-md text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
             >
               {user && avatarUrl ? (
                 <Avatar className="w-8 h-8 border border-white/20">
@@ -342,13 +342,7 @@ export const Header = () => {
                   </AvatarFallback>
                 </Avatar>
               ) : (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-white"
-                >
-                  <User className="h-4 w-4" />
-                </Button>
+                <User className="h-4 w-4" />
               )}
             </button>
 

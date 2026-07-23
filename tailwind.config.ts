@@ -63,6 +63,10 @@ export default {
 					ring: "hsl(var(--sidebar-ring))"
 				},
 				mono: {
+					// 50/950 NICHT entfernen: mehrere Komponenten (Account, OrderItem,
+					// HomePage) nutzen sie — ohne die Einträge erbt Text die Elternfarbe
+					// und wird z. B. weiß auf weißem Button (unsichtbares "Zum Shop").
+					"50": "#FFFFFF",
 					"100": "#FFFFFF",
 					"200": "#F6F6F7",
 					"300": "#EEEEEE",
@@ -71,7 +75,8 @@ export default {
 					"600": "#555555",
 					"700": "#403E43",
 					"800": "#222222",
-					"900": "#000000"
+					"900": "#000000",
+					"950": "#000000"
 				},
 				chart: {
 					"1": "hsl(var(--chart-1))",
