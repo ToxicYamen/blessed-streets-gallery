@@ -146,7 +146,7 @@ Deno.serve(async (req) => {
       to: order.customer_email,
       subject: `Deine Bestellung ${shortId} ist unterwegs — Blessed Streets`,
       html: renderTemplate("Deine Bestellung ist unterwegs", bodyHtml),
-      replyTo: "support@blessedstreets.de",
+      replyTo: "blessedstreets@icloud.com",
     });
 
     return json(

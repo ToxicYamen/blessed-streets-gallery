@@ -4,20 +4,6 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { SHOP_CONFIG } from '@/lib/shop-config';
 
-/**
- * Deutlich sichtbarer Platzhalter-Block für Angaben, die nur der Betreiber
- * liefern kann. Bewusst auffällig (amber), damit niemand die Seite für
- * fertig hält, solange diese Blöcke existieren.
- */
-const Platzhalter = ({ children }: { children: ReactNode }) => (
-  <div
-    role="note"
-    className="my-3 rounded-lg border-2 border-amber-400 bg-amber-400/10 px-4 py-3 text-sm font-semibold text-amber-700 dark:text-amber-300"
-  >
-    [PLATZHALTER: {children}]
-  </div>
-);
-
 const Section = ({ title, children }: { title: string; children: ReactNode }) => (
   <section className="mb-10">
     <h2 className="text-2xl font-bold mb-4">{title}</h2>
@@ -42,12 +28,16 @@ const Impressum = () => {
       <section className="py-16">
         <div className="blesssed-container">
           <div className="max-w-3xl">
-            <Section title="Anbieter">
-              <Platzhalter>Vor- und Nachname des Betreibers</Platzhalter>
-              <Platzhalter>
-                Ladungsfähige Anschrift (Straße und Hausnummer, Postleitzahl, Ort) — ein Postfach
-                genügt nicht
-              </Platzhalter>
+            <Section title="Angaben gemäß § 5 DDG">
+              <p className="font-semibold text-foreground">ENK.BS Label</p>
+              <p>Inhaberin: Esma Nur Kaya</p>
+              <p>
+                Martin-Luther-Str. 64
+                <br />
+                32756 Detmold
+                <br />
+                Deutschland
+              </p>
               <p>
                 {SHOP_CONFIG.brandName} — Streetwear aus Deutschland, gegründet{' '}
                 {SHOP_CONFIG.foundedYear}.
@@ -58,23 +48,18 @@ const Impressum = () => {
               <p>
                 E-Mail:{' '}
                 <a
-                  href="mailto:support@blessedstreets.de"
+                  href="mailto:blessedstreets@icloud.com"
                   className="underline underline-offset-4 hover:text-mono-900 dark:hover:text-mono-100"
                 >
-                  support@blessedstreets.de
+                  blessedstreets@icloud.com
                 </a>
               </p>
             </Section>
 
             <Section title="Umsatzsteuer">
               <p>
-                Gemäß § 19 UStG (Kleinunternehmerregelung) wird keine Umsatzsteuer erhoben und
-                ausgewiesen.
+                Kleinunternehmerin gemäß § 19 UStG — Umsatzsteuer wird nicht ausgewiesen.
               </p>
-              <Platzhalter>
-                Kleinunternehmer-Status nach § 19 UStG durch den Betreiber bestätigen — falls nicht
-                zutreffend, stattdessen USt-IdNr. angeben
-              </Platzhalter>
             </Section>
 
             <Section title="Zoll / Ausfuhr (Schweiz)">
@@ -102,12 +87,9 @@ const Impressum = () => {
                 </a>
               </p>
               <p>
-                Wir sind nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer
-                Verbraucherschlichtungsstelle teilzunehmen.
+                Zur Teilnahme an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle
+                sind wir nicht bereit und nicht verpflichtet.
               </p>
-              <Platzhalter>
-                Nichtteilnahme am Verbraucherschlichtungsverfahren durch den Betreiber bestätigen
-              </Platzhalter>
             </Section>
           </div>
         </div>

@@ -20,7 +20,10 @@ import type Stripe from "https://esm.sh/stripe@17.4.0?target=deno";
 
 const FROM = "Blessed Streets <shop@blessedstreets.de>";
 const SHOP_URL = "https://blessedstreets.de";
-const FALLBACK_ADMIN_EMAIL = "admin@blessedstreets.de";
+// blessedstreets.de kann nur SENDEN (Resend), nicht empfangen — Antworten und
+// Admin-Alerts müssen deshalb an das echte Postfach gehen.
+const FALLBACK_ADMIN_EMAIL = "blessedstreets@icloud.com";
+const DEFAULT_REPLY_TO = "blessedstreets@icloud.com";
 
 export type SendEmailResult = {
   sent: boolean;
@@ -104,7 +107,7 @@ export async function sendEmail(opts: {
         to: [opts.to],
         subject: opts.subject,
         html: opts.html,
-        ...(opts.replyTo ? { reply_to: opts.replyTo } : {}),
+        reply_to: opts.replyTo ?? DEFAULT_REPLY_TO,
       }),
     });
 
@@ -299,7 +302,7 @@ export async function sendOrderConfirmationEmails(
         to: customerEmail,
         subject: `Bestellbestätigung ${shortId} — Blessed Streets`,
         html: customerHtml,
-        replyTo: "support@blessedstreets.de",
+        replyTo: DEFAULT_REPLY_TO,
       });
     } else {
       console.log(

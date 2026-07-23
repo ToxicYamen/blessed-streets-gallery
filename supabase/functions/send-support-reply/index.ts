@@ -6,7 +6,7 @@
 // The admin Mail UI first saves the reply on the support_messages row
 // (reply_body / replied_at / status='answered' via RLS) and then calls this
 // function to actually deliver it. The mail quotes the customer's original
-// message (shortened) and sets replyTo support@blessedstreets.de so the
+// message (shortened) and sets replyTo blessedstreets@icloud.com so the
 // customer can answer directly.
 //
 // Without a RESEND_API_KEY the mail is skipped (never an error) and the
@@ -110,7 +110,7 @@ Deno.serve(async (req) => {
       to: msg.email,
       subject,
       html: renderTemplate("Antwort auf deine Anfrage", bodyHtml),
-      replyTo: "support@blessedstreets.de",
+      replyTo: "blessedstreets@icloud.com",
     });
 
     return json(

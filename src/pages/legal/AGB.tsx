@@ -1,36 +1,88 @@
 import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { SHOP_CONFIG } from '@/lib/shop-config';
 
-/**
- * Deutlich sichtbarer Platzhalter-Block für Texte, die der Betreiber über
- * einen AGB-Generator erzeugen muss. Bewusst auffällig (amber), damit niemand
- * die Seite für fertig hält, solange diese Blöcke existieren.
- */
-const Platzhalter = ({ children }: { children: ReactNode }) => (
-  <div
-    role="note"
-    className="my-3 rounded-lg border-2 border-amber-400 bg-amber-400/10 px-4 py-3 text-sm font-semibold text-amber-700 dark:text-amber-300"
-  >
-    [PLATZHALTER: {children}]
-  </div>
-);
+const linkClass =
+  'underline underline-offset-4 hover:text-mono-900 dark:hover:text-mono-100';
 
-const Section = ({ title, children }: { title: string; children: ReactNode }) => (
-  <section className="mb-10">
-    <h2 className="text-2xl font-bold mb-4">{title}</h2>
-    <div className="space-y-4 text-mono-600 dark:text-mono-300 leading-relaxed">{children}</div>
-  </section>
-);
+/**
+ * Geplante Gliederung der AGB. Die endgültigen Texte sind in rechtlicher
+ * Prüfung — bis dahin zeigt die Seite bewusst nur die Struktur
+ * (gewollter Zustand, vom Betreiber so gewünscht).
+ */
+const GLIEDERUNG: { nr: string; titel: string; beschreibung: ReactNode }[] = [
+  {
+    nr: '§ 1',
+    titel: 'Geltungsbereich',
+    beschreibung: 'Verträge zwischen ENK.BS Label und Verbrauchern über blessedstreets.de.',
+  },
+  {
+    nr: '§ 2',
+    titel: 'Vertragsschluss',
+    beschreibung: 'Bestellablauf und Bestellbestätigung per E-Mail.',
+  },
+  {
+    nr: '§ 3',
+    titel: 'Preise & Zahlung',
+    beschreibung: 'Endpreise ohne USt-Ausweis (§ 19 UStG), Zahlung per Karte über Stripe.',
+  },
+  {
+    nr: '§ 4',
+    titel: 'Lieferung & Versand',
+    beschreibung: 'Versand nach DE/AT/CH, Versandkosten, Lieferzeiten, Zoll bei CH-Lieferungen.',
+  },
+  {
+    nr: '§ 5',
+    titel: 'Eigentumsvorbehalt',
+    beschreibung: 'Die Ware bleibt bis zur vollständigen Zahlung unser Eigentum.',
+  },
+  {
+    nr: '§ 6',
+    titel: 'Widerrufsrecht',
+    beschreibung: (
+      <>
+        14 Tage Widerrufsrecht — alle Details in der{' '}
+        <Link to="/widerruf" className={linkClass}>
+          Widerrufsbelehrung
+        </Link>
+        .
+      </>
+    ),
+  },
+  {
+    nr: '§ 7',
+    titel: 'Gewährleistung',
+    beschreibung: 'Es gelten die gesetzlichen Mängelrechte.',
+  },
+  {
+    nr: '§ 8',
+    titel: 'Datenschutz',
+    beschreibung: (
+      <>
+        Wie wir mit deinen Daten umgehen, steht in der{' '}
+        <Link to="/datenschutz" className={linkClass}>
+          Datenschutzerklärung
+        </Link>
+        .
+      </>
+    ),
+  },
+  {
+    nr: '§ 9',
+    titel: 'Schlussbestimmungen',
+    beschreibung: 'Deutsches Recht, salvatorische Klausel.',
+  },
+];
 
 const AGB = () => {
   return (
     <div className="pt-24">
       <SEOHead
         title="AGB — Allgemeine Geschäftsbedingungen"
-        description={`Allgemeine Geschäftsbedingungen von ${SHOP_CONFIG.brandName} — Vertragsschluss, Preise, Versand nach DE/AT/CH, Zahlung und Gewährleistung.`}
+        description={`Allgemeine Geschäftsbedingungen von ${SHOP_CONFIG.brandName} — derzeit in rechtlicher Prüfung; bis dahin gelten die gesetzlichen Regelungen.`}
         canonicalPath="/agb"
         breadcrumbs={[
           { name: 'Home', url: '/' },
@@ -38,80 +90,54 @@ const AGB = () => {
         ]}
       />
       <PageHeader
-        title="AGB"
-        description="Allgemeine Geschäftsbedingungen für Bestellungen in unserem Online-Shop."
+        title="Allgemeine Geschäftsbedingungen."
+        description="Für deine Bestellung bei Blessed Streets."
       />
 
       <section className="py-16">
         <div className="blesssed-container">
           <div className="max-w-3xl">
-            <Section title="§ 1 Geltungsbereich">
-              <p>
-                Diese Allgemeinen Geschäftsbedingungen gelten für alle Bestellungen über den
-                Online-Shop von {SHOP_CONFIG.brandName} durch Verbraucher mit Lieferadresse in
-                Deutschland, Österreich oder der Schweiz.
+            {/* Hinweis-Block: gewollter Zustand, bis die finalen AGB vorliegen */}
+            <div className="mb-14 rounded-xl border border-mono-200/60 dark:border-mono-800 bg-white/40 dark:bg-mono-900/40 p-6 md:p-8">
+              <p className="text-xs font-semibold uppercase tracking-widest text-mono-500 mb-3">
+                In rechtlicher Prüfung
               </p>
-              <Platzhalter>Generator-Text zu § 1 Geltungsbereich einfügen</Platzhalter>
-            </Section>
-
-            <Section title="§ 2 Vertragsschluss">
-              <p>
-                Die Darstellung der Produkte im Shop stellt kein bindendes Angebot dar. Mit dem
-                Abschluss des Bestellvorgangs gibst du ein verbindliches Angebot ab; der Vertrag
-                kommt mit unserer Bestellbestätigung bzw. dem Versand der Ware zustande. Eine
-                Bestellung ist auch als Gast ohne Kundenkonto möglich.
+              <p className="text-mono-600 dark:text-mono-300 leading-relaxed">
+                Die endgültige Fassung unserer AGB wird derzeit ausgearbeitet. Bis dahin gelten die
+                gesetzlichen Regelungen (BGB, Fernabsatzrecht). Fragen zu deiner Bestellung:{' '}
+                <a href="mailto:blessedstreets@icloud.com" className={linkClass}>
+                  blessedstreets@icloud.com
+                </a>
               </p>
-              <Platzhalter>Generator-Text zu § 2 Vertragsschluss einfügen</Platzhalter>
-            </Section>
+            </div>
 
-            <Section title="§ 3 Preise und Versandkosten">
-              <p>
-                Alle Preise sind Endpreise in Euro. Gemäß § 19 UStG (Kleinunternehmerregelung) wird
-                keine Umsatzsteuer erhoben und ausgewiesen. Zusätzlich fallen folgende Versandkosten
-                an:
-              </p>
-              <ul className="list-disc pl-6 space-y-1">
-                <li>Deutschland: 4,99 € — versandkostenfrei ab 50 € Bestellwert (nur DE)</li>
-                <li>Österreich: 7,99 €</li>
-                <li>Schweiz: 12,99 €</li>
-              </ul>
-              <Platzhalter>Generator-Text zu § 3 Preise und Versandkosten einfügen</Platzhalter>
-            </Section>
+            <h2 className="text-2xl font-bold mb-2">Struktur — Was dich erwartet.</h2>
+            <p className="text-mono-600 dark:text-mono-300 mb-8">
+              So werden unsere AGB gegliedert sein:
+            </p>
 
-            <Section title="§ 4 Zahlung">
-              <p>
-                Die Zahlung erfolgt über den Zahlungsdienstleister Stripe. Verfügbare Zahlarten
-                werden im Checkout angezeigt.
-              </p>
-              <Platzhalter>Generator-Text zu § 4 Zahlung (Stripe, Fälligkeit) einfügen</Platzhalter>
-            </Section>
+            <ol className="divide-y divide-mono-200/60 dark:divide-mono-800 border-y border-mono-200/60 dark:border-mono-800">
+              {GLIEDERUNG.map((abschnitt) => (
+                <li key={abschnitt.nr} className="flex gap-6 py-5">
+                  <span className="w-12 shrink-0 font-mono text-sm text-mono-500 pt-0.5">
+                    {abschnitt.nr}
+                  </span>
+                  <div>
+                    <h3 className="font-semibold text-foreground">{abschnitt.titel}</h3>
+                    <p className="text-sm text-mono-600 dark:text-mono-300 mt-1 leading-relaxed">
+                      {abschnitt.beschreibung}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
 
-            <Section title="§ 5 Lieferung">
-              <p>
-                Wir liefern nach Deutschland, Österreich und in die Schweiz. Bei Lieferungen in die
-                Schweiz erfolgt die Ausfuhr mit {SHOP_CONFIG.carrier} unter unserer EORI-Nummer{' '}
-                <span className="font-mono">{SHOP_CONFIG.eori}</span>. Eventuelle Schweizer
-                Einfuhrabgaben (Zoll, Einfuhrsteuer) trägt der Empfänger.
-              </p>
-              <Platzhalter>Generator-Text zu § 5 Lieferung und Lieferzeiten einfügen</Platzhalter>
-            </Section>
-
-            <Section title="§ 6 Eigentumsvorbehalt">
-              <p>Die Ware bleibt bis zur vollständigen Bezahlung unser Eigentum.</p>
-              <Platzhalter>Generator-Text zu § 6 Eigentumsvorbehalt einfügen</Platzhalter>
-            </Section>
-
-            <Section title="§ 7 Gewährleistung">
-              <p>Es gilt das gesetzliche Mängelhaftungsrecht.</p>
-              <Platzhalter>Generator-Text zu § 7 Gewährleistung einfügen</Platzhalter>
-            </Section>
-
-            <Section title="§ 8 Schlussbestimmungen">
-              <Platzhalter>
-                Generator-Text zu § 8 Schlussbestimmungen (anwendbares Recht, salvatorische Klausel)
-                einfügen
-              </Platzhalter>
-            </Section>
+            <p className="mt-14 text-sm text-mono-500">
+              ENK.BS Label · Martin-Luther-Str. 64 · 32756 Detmold ·{' '}
+              <a href="mailto:blessedstreets@icloud.com" className={linkClass}>
+                blessedstreets@icloud.com
+              </a>
+            </p>
           </div>
         </div>
       </section>

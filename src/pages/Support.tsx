@@ -139,7 +139,7 @@ export default function Support() {
               contactPoint: {
                 '@type': 'ContactPoint',
                 contactType: 'Customer Support',
-                email: 'support@blessedstreets.de',
+                email: 'blessedstreets@icloud.com',
                 availableLanguage: ['de', 'en'],
                 areaServed: ['DE', 'AT', 'CH'],
               },

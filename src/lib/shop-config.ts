@@ -21,9 +21,8 @@ export const SHOP_CONFIG = {
   // die Abrechnung erfolgt immer in EUR über Stripe.
   chfPerEur: 0.93,
 
-  // PAngV-Hinweis unter Preisangaben (Kleinunternehmer-Formulierung).
-  // [PLATZHALTER: Betreiber muss den USt-Status bestätigen — gilt NUR bei
-  // Kleinunternehmerregelung nach § 19 UStG. Bei Regelbesteuerung stattdessen
-  // "inkl. MwSt. zzgl. Versandkosten" verwenden.]
+  // PAngV-Hinweis unter Preisangaben. Kleinunternehmerin nach § 19 UStG
+  // (vom Betreiber bestätigt) — es wird keine Umsatzsteuer ausgewiesen.
+  // Der Zusatz "Zzgl. Versandkosten." bleibt als PAngV-Pflichthinweis.
   vatNotice: 'Gemäß § 19 UStG wird keine Umsatzsteuer ausgewiesen. Zzgl. Versandkosten.',
 } as const;
