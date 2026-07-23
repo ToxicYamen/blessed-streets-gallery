@@ -5,10 +5,12 @@ import { useCart } from '@/context/CartContext';
 import type { CartItem } from '@/lib/store/cart';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { formatPrice, useCountry } from '@/lib/country';
 
 const Wishlist = () => {
   const navigate = useNavigate();
   const { wishlistItems, removeFromWishlist, addToCart } = useCart();
+  const [country] = useCountry();
 
   const handleRemove = (productId: string) => {
     removeFromWishlist(productId);
@@ -78,7 +80,7 @@ const Wishlist = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="py-6">{item.price.toFixed(2)} €</td>
+                        <td className="py-6">{formatPrice(item.price, country)}</td>
                         <td className="py-6">
                           <div className="flex justify-end gap-4">
                             <Button

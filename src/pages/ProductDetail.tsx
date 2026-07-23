@@ -33,6 +33,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
 import { useProductBySlug, useRelatedProducts } from '@/hooks/use-products';
 import { SHOP_CONFIG } from '@/lib/shop-config';
+import { formatPrice, useCountry } from '@/lib/country';
 
 const ProductDetail = () => {
   // Der Routen-Param ist der Produkt-Slug (z. B. 'black-hoodie').
@@ -40,6 +41,7 @@ const ProductDetail = () => {
   const { data: product, isLoading: loading } = useProductBySlug(id);
   const { data: relatedProducts = [] } = useRelatedProducts(id);
   const navigate = useNavigate();
+  const [country] = useCountry();
 
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<number>(0);
@@ -338,7 +340,13 @@ const ProductDetail = () => {
             <h1 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">{product.name}</h1>
             <p className="text-muted-foreground capitalize mb-6">{product.color || 'Default'}</p>
 
-            <p className="text-xl font-medium mb-1 text-foreground">€{product.price}</p>
+            <p className="text-xl font-medium mb-1 text-foreground">{formatPrice(product.price, country)}</p>
+            {/* CH: CHF ist nur Anzeige — abgerechnet wird in EUR (Stripe). */}
+            {country === 'CH' && (
+              <p className="text-xs text-muted-foreground">
+                Abrechnung in EUR ({formatPrice(product.price, 'DE')}) — CHF-Preis gerundet, Kurs ca. {SHOP_CONFIG.chfPerEur}
+              </p>
+            )}
             {/* PAngV-Pflichthinweis (Preisangabenverordnung) */}
             <p className="text-xs text-muted-foreground mb-6">{SHOP_CONFIG.vatNotice}</p>
 

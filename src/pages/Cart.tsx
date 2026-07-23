@@ -9,10 +9,12 @@ import { pageTransition } from '@/lib/transitions';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { formatPrice, useCountry } from '@/lib/country';
 
 const Cart = () => {
   const { cartItems, updateCartItemQuantity, removeFromCart } = useCart();
   const navigate = useNavigate();
+  const [country] = useCountry();
   const [stockLimits, setStockLimits] = useState<Record<string, Record<string, number>>>({});
   const [isLoading, setIsLoading] = useState(true);
 
@@ -166,7 +168,7 @@ const Cart = () => {
                       <div className="flex-1">
                         <div className="flex justify-between mb-2">
                           <h3 className="font-medium">{item.name}</h3>
-                          <span>{(item.price * item.quantity).toFixed(2)} €</span>
+                          <span>{formatPrice(item.price * item.quantity, country)}</span>
                         </div>
                         <div className="text-sm text-muted-foreground mb-4">
                           <p>Size: {item.size}</p>
@@ -224,7 +226,7 @@ const Cart = () => {
                   <div className="space-y-2 mb-3">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Subtotal</span>
-                      <span>{subtotal.toFixed(2)} €</span>
+                      <span>{formatPrice(subtotal, country)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Shipping</span>
@@ -233,7 +235,7 @@ const Cart = () => {
                     <div className="border-t pt-2 mt-2">
                       <div className="flex justify-between font-medium">
                         <span>Total</span>
-                        <span>{subtotal.toFixed(2)} €</span>
+                        <span>{formatPrice(subtotal, country)}</span>
                       </div>
                     </div>
                   </div>

@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import AnimatedImage from '@/components/ui/AnimatedImage';
 import { pageTransition } from '@/lib/transitions';
+import { formatPrice, useCountry } from '@/lib/country';
 
 interface ProductInventory {
   size: string;
@@ -36,6 +37,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   product
 }) => {
   const navigate = useNavigate();
+  const [country] = useCountry();
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -92,11 +94,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <div className="text-right">
           {product.isSale && product.salePrice ? (
             <div>
-              <span className="line-through text-muted-foreground dark:text-muted-foreground mr-2">€{product.price}</span>
-              <span className="text-foreground dark:text-foreground">€{product.salePrice}</span>
+              <span className="line-through text-muted-foreground dark:text-muted-foreground mr-2">{formatPrice(product.price, country)}</span>
+              <span className="text-foreground dark:text-foreground">{formatPrice(product.salePrice, country)}</span>
             </div>
           ) : (
-            <span className="text-foreground dark:text-foreground">€{product.price}</span>
+            <span className="text-foreground dark:text-foreground">{formatPrice(product.price, country)}</span>
           )}
         </div>
       </div>

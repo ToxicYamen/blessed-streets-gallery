@@ -31,8 +31,8 @@ const About = () => {
             <div className="order-first lg:order-last">
               <div className="rounded-xl overflow-hidden">
                 <AnimatedImage
-                  src="/lovable-uploads/17f078c8-2f1a-4e2e-8f56-39cc379c263c.png"
-                  alt="Our Story"
+                  src="/brand/campaign-flatlay-1080.webp"
+                  alt="Blessed-Streets-Hoodie als Flatlay auf einem Perserteppich mit Schallplatten und Kassetten"
                   className="w-full"
                   aspectRatio="square"
                 />

@@ -12,6 +12,12 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import {
+  ORDER_STATUS_BADGES,
+  ORDER_STATUS_LABELS,
+  isOrderStatus,
+  type OrderStatus,
+} from '@/lib/order-status';
 import { CartItem } from '@/lib/store/cart';
 import { cn } from '@/lib/utils';
 
@@ -40,74 +46,26 @@ interface OrderProps {
 }
 
 // ─── Status meta ────────────────────────────────────────────────────────────
+// Labels + Badge-Farben kommen aus der kanonischen Quelle in
+// src/lib/order-status.ts (identisch mit dem Admin-Panel). Hier bleibt nur
+// die Stepper-Position, weil sie reine Darstellung dieser Komponente ist.
 
-const STATUS_META: Record<
-  string,
-  {
-    label: string;
-    swatch: string;
-    border: string;
-    text: string;
-    stepIdx: number;
-  }
-> = {
-  pending: {
-    label: 'Ausstehend',
-    swatch: 'bg-mono-400',
-    border: 'border-mono-400/30',
-    text: 'text-mono-300',
-    stepIdx: -1,
-  },
-  confirmed: {
-    label: 'Bestätigt',
-    swatch: 'bg-sky-400',
-    border: 'border-sky-400/40',
-    text: 'text-sky-200',
-    stepIdx: 0,
-  },
-  processing: {
-    label: 'In Bearbeitung',
-    swatch: 'bg-amber-400',
-    border: 'border-amber-400/40',
-    text: 'text-amber-200',
-    stepIdx: 1,
-  },
-  shipped: {
-    label: 'Versendet',
-    swatch: 'bg-indigo-400',
-    border: 'border-indigo-400/40',
-    text: 'text-indigo-200',
-    stepIdx: 2,
-  },
-  delivered: {
-    label: 'Zugestellt',
-    swatch: 'bg-emerald-400',
-    border: 'border-emerald-400/40',
-    text: 'text-emerald-200',
-    stepIdx: 3,
-  },
-  cancelled: {
-    label: 'Storniert',
-    swatch: 'bg-rose-400',
-    border: 'border-rose-400/40',
-    text: 'text-rose-200',
-    stepIdx: -2,
-  },
-  refunded: {
-    label: 'Erstattet',
-    swatch: 'bg-rose-400',
-    border: 'border-rose-400/40',
-    text: 'text-rose-200',
-    stepIdx: -2,
-  },
+const STATUS_STEP_IDX: Record<OrderStatus, number> = {
+  pending: -1,
+  confirmed: 0,
+  processing: 1,
+  shipped: 2,
+  delivered: 3,
+  cancelled: -2,
+  refunded: -2,
 };
 
-const STEPS: { key: string; label: string }[] = [
-  { key: 'confirmed', label: 'Bestätigt' },
-  { key: 'processing', label: 'In Bearbeitung' },
-  { key: 'shipped', label: 'Versendet' },
-  { key: 'delivered', label: 'Zugestellt' },
-];
+const STEP_KEYS = ['confirmed', 'processing', 'shipped', 'delivered'] as const;
+
+const STEPS: { key: string; label: string }[] = STEP_KEYS.map((key) => ({
+  key,
+  label: ORDER_STATUS_LABELS[key],
+}));
 
 // ─── Carrier meta ───────────────────────────────────────────────────────────
 
@@ -197,13 +155,17 @@ function parseAddress(raw: string): {
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const OrderItem = ({ order }: OrderProps) => {
-  const meta = STATUS_META[order.status] ?? STATUS_META.pending;
+  const status: OrderStatus = isOrderStatus(order.status)
+    ? order.status
+    : 'pending';
+  const badge = ORDER_STATUS_BADGES[status];
+  const stepIdx = STATUS_STEP_IDX[status];
   const addr = parseAddress(order.shipping_address ?? '');
   const carrierKey = (order.shipping_carrier ?? null) as Carrier | null;
   const carrier = carrierKey ? CARRIER_META[carrierKey] : null;
-  const isShipped = order.status === 'shipped' || order.status === 'delivered';
-  const isCancelled = order.status === 'cancelled';
-  const isRefunded = order.status === 'refunded';
+  const isShipped = status === 'shipped' || status === 'delivered';
+  const isCancelled = status === 'cancelled';
+  const isRefunded = status === 'refunded';
   const isClosed = isCancelled || isRefunded;
   // Short order reference, same form as shown in the header (#XXXXXXXX).
   const shortId = order.id.slice(0, 8).toUpperCase();
@@ -231,14 +193,14 @@ export const OrderItem = ({ order }: OrderProps) => {
       <header className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 p-6 md:p-8 border-b border-mono-100/10">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2.5">
-            <span className={cn('size-1.5 rounded-full', meta.swatch)} />
+            <span className={cn('size-1.5 rounded-full', badge.dot)} />
             <span
               className={cn(
                 'font-mono text-[10px] uppercase tracking-[0.25em]',
-                meta.text,
+                badge.text,
               )}
             >
-              {meta.label}
+              {ORDER_STATUS_LABELS[status]}
             </span>
           </div>
           <p className="font-mono text-mono-100 mt-2 text-sm">
@@ -268,7 +230,7 @@ export const OrderItem = ({ order }: OrderProps) => {
       {/* ─── Status stepper ─────────────────────────────────────── */}
       {!isClosed && (
         <div className="px-6 md:px-8 pt-7 pb-6">
-          <StatusStepper currentStep={meta.stepIdx} />
+          <StatusStepper currentStep={stepIdx} />
         </div>
       )}
       {isClosed && (
@@ -303,7 +265,9 @@ export const OrderItem = ({ order }: OrderProps) => {
                   Sendung
                 </p>
                 <p className="text-sm text-mono-100 mt-0.5">
-                  {order.status === 'delivered' ? 'Zugestellt' : 'Unterwegs zu dir'}
+                  {status === 'delivered'
+                    ? ORDER_STATUS_LABELS.delivered
+                    : 'Unterwegs zu dir'}
                 </p>
               </div>
             </div>
@@ -322,7 +286,7 @@ export const OrderItem = ({ order }: OrderProps) => {
                 <span className="truncate">{order.tracking_number}</span>
                 <Copy className="size-3.5 shrink-0 opacity-0 group-hover/copy:opacity-100 transition-opacity" />
               </button>
-              {order.estimated_delivery && order.status !== 'delivered' && (
+              {order.estimated_delivery && status !== 'delivered' && (
                 <p className="text-xs text-mono-500 mt-2 flex items-center gap-1.5">
                   <Clock className="size-3" />
                   Geschätzt:{' '}

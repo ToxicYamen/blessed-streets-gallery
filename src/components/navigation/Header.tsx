@@ -13,22 +13,29 @@ import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import '@/i18n/config';
 import { useTheme } from '@/components/theme/ThemeProvider';
+import { useCountry, type Country } from '@/lib/country';
+
+// Länder-Umschalter (statt Sprach-Umschalter): steuert Preisanzeige
+// (CHF-Anzeige für CH) und die Lieferland-Vorauswahl im Checkout.
+const COUNTRIES: { code: Country; label: string }[] = [
+  { code: 'DE', label: 'Deutschland' },
+  { code: 'AT', label: 'Österreich' },
+  { code: 'CH', label: 'Schweiz' },
+];
 
 export const Header = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isHeartAnimating, setIsHeartAnimating] = useState(false);
-  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
-  const [currentLanguage, setCurrentLanguage] = useState<'DE' | 'US'>(
-    localStorage.getItem('i18nextLng')?.startsWith('de') ? 'DE' : 'US'
-  );
+  const [isCountryOpen, setIsCountryOpen] = useState(false);
+  const [country, setCountry] = useCountry();
   const [user, setUser] = useState<any>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const cartIconRef = useRef<HTMLDivElement>(null);
-  const languageRef = useRef<HTMLDivElement>(null);
+  const countryRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { cartItems } = useCart();
   const { theme } = useTheme();
@@ -77,8 +84,8 @@ export const Header = () => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (languageRef.current && !languageRef.current.contains(event.target as Node)) {
-        setIsLanguageOpen(false);
+      if (countryRef.current && !countryRef.current.contains(event.target as Node)) {
+        setIsCountryOpen(false);
       }
     };
 
@@ -216,77 +223,56 @@ export const Header = () => {
           <div className="flex items-center space-x-4">
             <ThemeToggle />
 
-            <div className="relative hidden lg:block" ref={languageRef}>
+            <div className="relative hidden lg:block" ref={countryRef}>
               <Button
                 variant="ghost"
-                size="icon"
-                className="text-white flex items-center gap-2 [&:hover]:bg-transparent"
-                onClick={() => setIsLanguageOpen(!isLanguageOpen)}
+                className="text-white flex items-center gap-1.5 px-2 [&:hover]:bg-transparent"
+                onClick={() => setIsCountryOpen(!isCountryOpen)}
+                aria-label="Land wählen"
               >
                 <ReactCountryFlag
-                  countryCode={currentLanguage}
+                  countryCode={country}
                   svg
                   style={{
                     width: '1.5em',
                     height: '1.5em',
                   }}
-                  title={currentLanguage}
+                  title={country}
                 />
+                <span className="text-sm">{country}</span>
                 <ChevronDown className={cn(
                   "h-4 w-4 transition-transform duration-200",
-                  isLanguageOpen ? "rotate-180" : ""
+                  isCountryOpen ? "rotate-180" : ""
                 )} />
               </Button>
 
-              {isLanguageOpen && (
-                <div className="absolute right-0 mt-2 w-32 rounded-md shadow-lg bg-black/90 backdrop-blur-sm ring-1 ring-black ring-opacity-5 z-50">
+              {isCountryOpen && (
+                <div className="absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-black/90 backdrop-blur-sm ring-1 ring-black ring-opacity-5 z-50">
                   <div className="py-1">
-                    <button
-                      className={cn(
-                        "flex items-center gap-2 px-4 py-2 text-sm text-white w-full",
-                        currentLanguage === 'DE' && "bg-white/5"
-                      )}
-                      onClick={() => {
-                        setCurrentLanguage('DE');
-                        i18n.changeLanguage('de');
-                        localStorage.setItem('i18nextLng', 'de');
-                        setIsLanguageOpen(false);
-                      }}
-                    >
-                      <ReactCountryFlag
-                        countryCode="DE"
-                        svg
-                        style={{
-                          width: '1.5em',
-                          height: '1.5em',
+                    {COUNTRIES.map(({ code, label }) => (
+                      <button
+                        key={code}
+                        className={cn(
+                          "flex items-center gap-2 px-4 py-2 text-sm text-white w-full",
+                          country === code && "bg-white/5"
+                        )}
+                        onClick={() => {
+                          setCountry(code);
+                          setIsCountryOpen(false);
                         }}
-                        title="DE"
-                      />
-                      Deutsch
-                    </button>
-                    <button
-                      className={cn(
-                        "flex items-center gap-2 px-4 py-2 text-sm text-white w-full",
-                        currentLanguage === 'US' && "bg-white/5"
-                      )}
-                      onClick={() => {
-                        setCurrentLanguage('US');
-                        i18n.changeLanguage('en');
-                        localStorage.setItem('i18nextLng', 'en');
-                        setIsLanguageOpen(false);
-                      }}
-                    >
-                      <ReactCountryFlag
-                        countryCode="US"
-                        svg
-                        style={{
-                          width: '1.5em',
-                          height: '1.5em',
-                        }}
-                        title="US"
-                      />
-                      English
-                    </button>
+                      >
+                        <ReactCountryFlag
+                          countryCode={code}
+                          svg
+                          style={{
+                            width: '1.5em',
+                            height: '1.5em',
+                          }}
+                          title={code}
+                        />
+                        {label}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
@@ -429,8 +415,36 @@ export const Header = () => {
               </button>
             </nav>
 
-            <div className="mt-auto pb-8 text-sm text-white/50">
-              {t('footer.copyright', { year: new Date().getFullYear() })}
+            <div className="mt-auto pb-8">
+              {/* Länder-Umschalter (mobil) — gleiche Quelle wie Desktop/Checkout */}
+              <div className="flex items-center gap-3 mb-6">
+                {COUNTRIES.map(({ code }) => (
+                  <button
+                    key={code}
+                    onClick={() => setCountry(code)}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-2 rounded-md border text-sm transition-colors",
+                      country === code
+                        ? "border-white text-white"
+                        : "border-white/20 text-white/60"
+                    )}
+                  >
+                    <ReactCountryFlag
+                      countryCode={code}
+                      svg
+                      style={{
+                        width: '1.2em',
+                        height: '1.2em',
+                      }}
+                      title={code}
+                    />
+                    {code}
+                  </button>
+                ))}
+              </div>
+              <div className="text-sm text-white/50">
+                {t('footer.copyright', { year: new Date().getFullYear() })}
+              </div>
             </div>
           </div>
         </div>

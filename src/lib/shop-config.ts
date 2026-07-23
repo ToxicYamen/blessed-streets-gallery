@@ -16,6 +16,11 @@ export const SHOP_CONFIG = {
   // Bediente Länder (ISO 3166-1 alpha-2).
   countries: ['DE', 'AT', 'CH'],
 
+  // Anzeige-Kurs EUR→CHF für Schweizer Kund:innen — regelmäßig anpassen!
+  // Nur für die Preis-ANZEIGE (src/lib/country.ts → formatPrice);
+  // die Abrechnung erfolgt immer in EUR über Stripe.
+  chfPerEur: 0.93,
+
   // PAngV-Hinweis unter Preisangaben (Kleinunternehmer-Formulierung).
   // [PLATZHALTER: Betreiber muss den USt-Status bestätigen — gilt NUR bei
   // Kleinunternehmerregelung nach § 19 UStG. Bei Regelbesteuerung stattdessen

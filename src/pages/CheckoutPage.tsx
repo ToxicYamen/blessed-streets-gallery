@@ -5,6 +5,8 @@ import { toast } from "sonner";
 
 import { useCartStore } from "@/lib/store/cart";
 import { supabase } from "@/integrations/supabase/client";
+import { formatPrice, useCountry, type Country } from "@/lib/country";
+import { SHOP_CONFIG } from "@/lib/shop-config";
 import { SEOHead } from "@/components/seo/SEOHead";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -17,8 +19,6 @@ import {
 
 const FUNCTIONS_URL = "https://xsyjrijezdajiojxgzzr.supabase.co/functions/v1";
 
-type Country = "DE" | "AT" | "CH";
-
 // Öffentlich kommunizierte Versandkosten — MUSS mit der Edge Function
 // create-checkout-session übereinstimmen (dort serverseitig verbindlich).
 const SHIPPING_RATES: Record<Country, { label: string; cost: number }> = {
@@ -28,8 +28,6 @@ const SHIPPING_RATES: Record<Country, { label: string; cost: number }> = {
 };
 
 const FREE_SHIPPING_THRESHOLD = 50; // 50,00 € Zwischensumme — nur DE
-
-const formatEur = (n: number) => `${n.toFixed(2).replace(".", ",")} €`;
 
 /**
  * "checking"      — validation in flight; the pay button stays disabled.
@@ -58,7 +56,9 @@ const CheckoutPage = () => {
   const [loading, setLoading] = useState(false);
   const [stockStatus, setStockStatus] = useState<StockStatus>("checking");
   const [stockLimits, setStockLimits] = useState<Record<string, Record<string, number>>>({});
-  const [country, setCountry] = useState<Country>("DE");
+  // Land kommt aus dem globalen Länder-Umschalter (Header) und wird von hier
+  // aus auch zurückgeschrieben — eine Quelle der Wahrheit (localStorage 'bs-country').
+  const [country, setCountry] = useCountry();
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Server-side cart validation (Stripe re-validates anyway, but failing fast is nicer UX).
@@ -259,7 +259,7 @@ const CheckoutPage = () => {
                       )}
                     </div>
                     <p className="font-medium">
-                      {formatEur(item.price * item.quantity)}
+                      {formatPrice(item.price * item.quantity, country)}
                     </p>
                   </div>
                 );
@@ -269,18 +269,25 @@ const CheckoutPage = () => {
             <div className="border-t border-border mt-4 pt-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Zwischensumme</span>
-                <span>{formatEur(subtotal)}</span>
+                <span>{formatPrice(subtotal, country)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">
                   Versand ({SHIPPING_RATES[country].label})
                 </span>
-                <span>{freeShipping ? "Kostenlos" : formatEur(shippingCost)}</span>
+                <span>{freeShipping ? "Kostenlos" : formatPrice(shippingCost, country)}</span>
               </div>
               <div className="flex justify-between font-semibold text-lg pt-2">
                 <span>Total</span>
-                <span>{formatEur(total)}</span>
+                <span>{formatPrice(total, country)}</span>
               </div>
+              {/* CH: CHF ist nur Anzeige — Stripe rechnet in EUR ab. */}
+              {country === "CH" && (
+                <p className="text-xs text-muted-foreground pt-1">
+                  Abrechnung in EUR ({formatPrice(total, "DE")}) — CHF-Preis
+                  gerundet, Kurs ca. {SHOP_CONFIG.chfPerEur}
+                </p>
+              )}
             </div>
           </section>
 
@@ -328,7 +335,7 @@ const CheckoutPage = () => {
               <div className="flex justify-between text-sm mt-3">
                 <span className="text-muted-foreground">Versandkosten</span>
                 <span>
-                  {freeShipping ? "Kostenlos" : formatEur(shippingCost)}
+                  {freeShipping ? "Kostenlos" : formatPrice(shippingCost, country)}
                 </span>
               </div>
               {country === "DE" && (
@@ -380,7 +387,7 @@ const CheckoutPage = () => {
               ) : (
                 <>
                   <Lock className="size-4" />
-                  Sicher bezahlen · {formatEur(total)}
+                  Sicher bezahlen · {formatPrice(total, country)}
                 </>
               )}
             </button>

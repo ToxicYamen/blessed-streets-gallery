@@ -7,61 +7,124 @@ interface LookbookItem {
   id: string;
   title: string;
   description: string;
+  alt: string;
   image: string;
   type: 'image' | 'video';
   season: 'winter' | 'essentials' | 'limited';
 }
 
 const Lookbook = () => {
-  // Kampagnen-Fotos aus BlessedStreetsResource (weboptimiert in public/brand).
+  // Kuratierte Galerie: die vier neuen Kampagnen-Motive (campaign-*) plus die
+  // Brand-Sets aus dem Shooting, die sonst nirgends auf der Seite laufen.
+  // Alle Assets weboptimiert in public/brand (scripts/optimize-campaign.mjs).
   const [lookbookItems] = useState<LookbookItem[]>([
     {
       id: 'look1',
-      title: 'Urban Essentials',
-      description: 'Minimal streetwear for the modern wardrobe.',
-      image: '/brand/black-02-1080.webp',
+      title: 'Vinyl Session',
+      description: 'Der Hoodie im Flatlay auf dem Perserteppich, zwischen Vinyl und Kassetten.',
+      alt: 'Schwarzer Blessed-Streets-Hoodie als Flatlay auf einem Perserteppich mit Schallplatten und Kassetten',
+      image: '/brand/campaign-flatlay-1080.webp',
+      type: 'image',
+      season: 'limited'
+    },
+    {
+      id: 'look2',
+      title: 'Record Store',
+      description: 'Zwischen den Plattenkisten: der schwarze Hoodie im Record Store.',
+      alt: 'Model im schwarzen Blessed-Streets-Hoodie zwischen Plattenregalen in einem Plattenladen',
+      image: '/brand/campaign-recordstore-1080.webp',
       type: 'image',
       season: 'essentials'
     },
     {
-      id: 'look2',
-      title: 'Winter Layers',
-      description: 'Premium layering pieces for the cold season.',
-      image: '/brand/sage-02-1080.webp',
-      type: 'image',
-      season: 'winter'
-    },
-    {
       id: 'look3',
-      title: 'Limited Edition',
-      description: 'Exclusive drops with limited availability.',
-      image: '/brand/life-02-1080.webp',
+      title: 'Graffiti Tunnel',
+      description: 'Zwei Looks im Graffiti-Tunnel — Streetwear in ihrem Element.',
+      alt: 'Zwei Models in schwarzen Blessed-Streets-Hoodies in einem mit Graffiti besprühten Tunnel',
+      image: '/brand/campaign-tunnel-1080.webp',
       type: 'image',
       season: 'limited'
     },
     {
       id: 'look4',
-      title: 'Street Couture',
-      description: 'Elevated basics with a distinctive edge.',
-      image: '/brand/life-03-1080.webp',
+      title: 'Open Skies',
+      description: 'Golden Hour am Kofferraum — zwei Hoodies vor offenem Himmel.',
+      alt: 'Zwei Models in Blessed-Streets-Hoodies am offenen Kofferraum vor blauem Himmel',
+      image: '/brand/campaign-trunk-1080.webp',
       type: 'image',
       season: 'essentials'
     },
     {
       id: 'look5',
-      title: 'Winter Statement',
-      description: 'Bold statement pieces for winter.',
-      image: '/brand/black-03-1080.webp',
+      title: 'Black Colourway',
+      description: 'Der schwarze Hoodie frontal — kompromisslos reduziert.',
+      alt: 'Model im schwarzen Blessed-Streets-Hoodie vor einer Graffiti-Wand',
+      image: '/brand/black-04-1080.webp',
       type: 'image',
       season: 'winter'
     },
     {
       id: 'look6',
-      title: 'Essential Minimalism',
-      description: 'Refined minimalist approach to everyday wear.',
-      image: '/brand/sage-03-1080.webp',
+      title: 'Sage Colourway',
+      description: 'Der Sage-Hoodie an der Graffiti-Wand — Ton in Ton mit der Stadt.',
+      alt: 'Model im salbeigrünen Blessed-Streets-Hoodie vor einer Graffiti-Wand',
+      image: '/brand/sage-04-1080.webp',
+      type: 'image',
+      season: 'winter'
+    },
+    {
+      id: 'look7',
+      title: 'Stairwell',
+      description: 'Am Geländer im Foyer — der schwarze Hoodie im Alltag.',
+      alt: 'Model im schwarzen Blessed-Streets-Hoodie an einem Treppengeländer im Kino-Foyer',
+      image: '/brand/life-04-1080.webp',
       type: 'image',
       season: 'essentials'
+    },
+    {
+      id: 'look8',
+      title: 'Front Row',
+      description: 'Kurz durchatmen — auf den Stufen im Kino-Foyer.',
+      alt: 'Model im schwarzen Blessed-Streets-Hoodie sitzt auf den Stufen einer Treppe im Kino-Foyer',
+      image: '/brand/life-05-1080.webp',
+      type: 'image',
+      season: 'winter'
+    },
+    {
+      id: 'look9',
+      title: 'Take a Seat',
+      description: 'Ruhige Silhouette, klarer Schnitt — der weite Blick über die Treppe.',
+      alt: 'Model im schwarzen Blessed-Streets-Hoodie sitzt mittig auf einer breiten Treppe',
+      image: '/brand/life-06-1080.webp',
+      type: 'image',
+      season: 'essentials'
+    },
+    {
+      id: 'look10',
+      title: 'Full Fit',
+      description: 'Der komplette Look in voller Länge auf der Treppe.',
+      alt: 'Model im schwarzen Blessed-Streets-Hoodie in Ganzkörperansicht auf einer Treppe',
+      image: '/brand/life-07-1080.webp',
+      type: 'image',
+      season: 'limited'
+    },
+    {
+      id: 'look11',
+      title: 'Eye Level',
+      description: 'Frontal am Geländer — schwerer Stoff, klare Linien.',
+      alt: 'Model im schwarzen Blessed-Streets-Hoodie lehnt an einem Treppengeländer',
+      image: '/brand/life-08-1080.webp',
+      type: 'image',
+      season: 'winter'
+    },
+    {
+      id: 'look12',
+      title: 'After Hours',
+      description: 'Abendlicht im Foyer — der Hoodie im warmen Braunton.',
+      alt: 'Model im braunen Blessed-Streets-Hoodie lehnt an einem Geländer und blickt nach oben',
+      image: '/brand/life-09-1080.webp',
+      type: 'image',
+      season: 'limited'
     }
   ]);
 
@@ -90,7 +153,7 @@ const Lookbook = () => {
                     <div className="relative overflow-hidden rounded-xl mb-4">
                       <AnimatedImage
                         src={item.image}
-                        alt={item.title}
+                        alt={item.alt}
                         className="w-full hover-scale"
                         aspectRatio="square"
                       />
@@ -111,7 +174,7 @@ const Lookbook = () => {
                       <div className="relative overflow-hidden rounded-xl mb-4">
                         <AnimatedImage
                           src={item.image}
-                          alt={item.title}
+                          alt={item.alt}
                           className="w-full hover-scale"
                           aspectRatio="square"
                         />
@@ -132,7 +195,7 @@ const Lookbook = () => {
                       <div className="relative overflow-hidden rounded-xl mb-4">
                         <AnimatedImage
                           src={item.image}
-                          alt={item.title}
+                          alt={item.alt}
                           className="w-full hover-scale"
                           aspectRatio="square"
                         />
@@ -153,7 +216,7 @@ const Lookbook = () => {
                       <div className="relative overflow-hidden rounded-xl mb-4">
                         <AnimatedImage
                           src={item.image}
-                          alt={item.title}
+                          alt={item.alt}
                           className="w-full hover-scale"
                           aspectRatio="square"
                         />
