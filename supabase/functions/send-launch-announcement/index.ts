@@ -18,17 +18,23 @@ const SHOP_URL = "https://blessedstreets.de";
 // Resend erlaubt 2 Requests/Sekunde — mit 600 ms Abstand bleiben wir sicher drunter.
 const DELAY_MS = 600;
 
+// Bewusst zurückhaltend formuliert (kein Emoji im Betreff, wenig
+// Marketing-Vokabular, Link zusätzlich als Klartext, Erklärungszeile am
+// Ende) — die erste Fassung wurde von Gmail als Werbung wegsortiert,
+// obwohl Resend "delivered" meldete.
 function launchEmailHtml(): string {
   return renderTemplate(
-    "Wir sind live! 🖤",
-    `<p style="margin:0 0 16px;">Der Moment ist da: <strong style="color:#fafafa;">Blessed Streets ist online.</strong></p>
-     <p style="margin:0 0 16px;">Du hast dich eingetragen, um es als Erste:r zu erfahren — hier ist dein Zugang zum Drop:</p>
+    "Blessed Streets ist jetzt online",
+    `<p style="margin:0 0 16px;">Es ist so weit: <strong style="color:#fafafa;">blessedstreets.de ist freigeschaltet.</strong></p>
+     <p style="margin:0 0 16px;">Du hattest dich auf unserer Startseite eingetragen, um zum Start Bescheid zu bekommen — das ist diese Nachricht.</p>
      <p style="margin:28px 0;text-align:center;">
-       <a href="${SHOP_URL}" style="display:inline-block;background-color:#fafafa;color:#0a0a0a;padding:12px 28px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;letter-spacing:1px;text-decoration:none;">ZUM SHOP</a>
+       <a href="${SHOP_URL}" style="display:inline-block;background-color:#fafafa;color:#0a0a0a;padding:12px 28px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;letter-spacing:1px;text-decoration:none;">Zum Shop</a>
      </p>
+     <p style="margin:0 0 16px;">Oder direkt im Browser öffnen: <a href="${SHOP_URL}" style="color:#d4d4d4;">${SHOP_URL.replace("https://", "")}</a></p>
      <p style="margin:0;color:#a3a3a3;font-size:12px;line-height:1.6;">
-       Limitierte Stückzahlen — wenn deine Größe weg ist, ist sie weg.<br>
-       Danke, dass du von Anfang an dabei bist. — Esma, Blessed Streets
+       Danke, dass du von Anfang an dabei bist. — Esma, Blessed Streets<br><br>
+       Du bekommst diese einmalige E-Mail, weil du dich auf blessedstreets.de
+       für die Launch-Benachrichtigung eingetragen hast.
      </p>`,
   );
 }
@@ -108,7 +114,7 @@ Deno.serve(async (req) => {
     for (const r of recipients) {
       const result = await sendEmail({
         to: r.email,
-        subject: "Blessed Streets ist live — dein Drop wartet 🖤",
+        subject: "Blessed Streets ist jetzt online",
         html,
       });
       if (result.sent) {
